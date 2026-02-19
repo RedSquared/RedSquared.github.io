@@ -205,6 +205,19 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 </head>
 <body>
 
+<!-- ============================================================
+  HEADER BAR (sticky — always visible at the top of the page)
+  Contains:
+    - Logo / branding on the left
+    - "Selling At" dropdown: which station you're listing items at
+    - "Bought From" dropdown: optional, where you bought them (used
+      to warn you if selling back there would make more money)
+    - Reset button: clears everything and starts fresh
+    - Settings button: opens the tuning panel below
+    - Fetch Prices button: kicks off the live market data lookup
+  The Fetch Prices button stays greyed out until you've both pasted
+  items AND selected a station.
+============================================================ -->
 <header>
   <div class="logo">
     <div class="logo-icon"></div>
@@ -247,6 +260,16 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   </div>
 </header>
 
+<!-- ============================================================
+  SETTINGS BAR (hidden by default, slides open when you click ⚙)
+  Four tuning knobs that affect how prices are calculated:
+    - Undercut Ticks: how aggressively to undercut the lowest seller
+    - Markup %: how much to add when falling back to Jita/Amarr
+    - Gap Threshold: when to warn about a suspicious price gap
+    - Buy Floor Buffer: safety margin above the highest buy order
+  You don't need to touch these — the defaults work well for most
+  general trading. They're here for fine-tuning.
+============================================================ -->
 <div class="settings-bar" id="settings-bar">
   <div class="setting-item">
     <span class="setting-label">Undercut Ticks</span>
@@ -275,6 +298,15 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 
 <div class="main">
 
+  <!-- ============================================================
+    PASTE SECTION
+    The big text box where you paste the export from EVE's sell window.
+    As soon as you paste something, it parses the tab-separated data
+    and counts how many items it found. The "Clear" button wipes the
+    text box (but keeps your station selected).
+    The hint panel on the right shows the step-by-step export
+    instructions so you don't have to memorise them.
+  ============================================================ -->
   <div class="paste-section">
     <div class="section-header">
       <div class="section-title">EVE Multi Sell Export</div>
@@ -300,12 +332,37 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </div>
   </div>
 
+  <!-- ============================================================
+    STATUS / PROGRESS BAR
+    Visible only while prices are being fetched. Shows a progress bar
+    and the name of the item currently being looked up. Hidden when
+    idle or after fetching is complete.
+  ============================================================ -->
   <div id="status-bar">
     <span class="status-text" id="status-text">Fetching market data...</span>
     <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)" id="progress-count">0 / 0</span>
   </div>
 
+  <!-- ============================================================
+    RESULTS TABLE
+    The main output — one row per item. Columns from left to right:
+      Item Name     — links to EVE Tycoon for more market detail
+      Qty           — how many you're selling
+      Lowest Sell   — cheapest current listing at your station
+      Age           — how old that listing is (stale = may be fake)
+      2nd Lowest    — next cheapest; useful for spotting gap opportunities
+      Age           — age of the 2nd listing
+      Highest Buy   — best buy order (your price floor)
+      Your Price    — recommended sell price (auto-calculated)
+      Total ISK     — Your Price × Qty
+      Override      — type here to set a custom price for that item
+      Flags         — colour-coded warnings; hover each one for details
+
+    Rows appear immediately as skeletons (grey shimmer) and fill in
+    one at a time as each item's market data comes back.
+    Clicking any column header sorts the table by that column.
+  ============================================================ -->
   <div class="results-section" id="results-section">
     <div class="section-header" style="gap:16px;">
       <div class="section-title">Calculated Prices</div>
@@ -334,6 +391,14 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </div>
   </div>
 
+  <!-- ============================================================
+    COPY PANEL (appears after prices are fetched)
+    Shows the final formatted output — one line per item in the
+    "Name [tab] Price" format that EVE's Import Prices window expects.
+    Items with no price data are skipped and counted separately.
+    "Copy All" sends the whole block to your clipboard so you can
+    paste directly into EVE.
+  ============================================================ -->
   <div class="copy-panel" id="copy-panel">
     <div class="section-header">
       <div class="section-title">EVE Import — Ready to Paste</div>
@@ -349,6 +414,30 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 
 <div class="toast" id="toast">✓ Copied to clipboard!</div>
 
+<!-- ============================================================
+  JAVASCRIPT — all the logic that makes the page work.
+  Sections (in order):
+    Constants       — API URL, station IDs used for fallback pricing
+    State           — variables that track what's currently loaded
+    getSettings()   — reads the values from the Settings bar
+    getSelectedStation() / getBuyFromStation() — reads the dropdowns
+    PARSE           — turns the raw pasted EVE export text into a list
+                      of { typeId, name, quantity } objects
+    DATE HELPERS    — calculates and formats how old a market order is
+    MATH            — calculates the "tick size" (minimum price step)
+                      and formats ISK numbers for display
+    ESI             — talks to the EVE market API to fetch order data
+    MAIN FETCH      — orchestrates the full price lookup for all items:
+                        1. pulls market orders for the target station
+                        2. applies undercut logic to get "Your Price"
+                        3. enforces the buy-order floor
+                        4. optionally checks the "Bought From" station
+                        5. checks for suspicious price gaps
+    RENDER          — builds the HTML for table rows, flags, stats bar,
+                      and the copy panel output
+    EVENTS          — wires up all the buttons and dropdowns so clicks
+                      and input changes actually do something
+============================================================ -->
 <script>
 const ESI_BASE = 'https://esi.evetech.net/latest';
 const JITA_STATION = 60003760;
