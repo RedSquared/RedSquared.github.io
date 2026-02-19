@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVE Multi Sell Pricer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-void: #06080f;
+  --bg-deep: #0b0f1a;
+  --bg-panel: #0f1520;
+  --bg-card: #141b28;
+  --bg-hover: #1a2338;
+  --border: #1e2d47;
+  --border-bright: #2a4070;
+  --gold: #c8960c;
+  --gold-bright: #f0b429;
+  --gold-dim: #7a5a08;
+  --cyan: #00b4cc;
+  --cyan-dim: #006a7a;
+  --green: #2ecc71;
+  --green-dim: #1a7a44;
+  --red: #e74c3c;
+  --red-dim: #7a1a12;
+  --amber: #f39c12;
+  --text-primary: #d8e4f0;
+  --text-secondary: #7a98b8;
+  --text-dim: #3d5470;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Orbitron', sans-serif;
+  --body: 'Exo 2', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg-void); color: var(--text-primary);
+  font-family: var(--body); font-size: 14px; min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(0,100,180,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,150,12,0.04) 0%, transparent 50%);
+}
+header {
+  background: var(--bg-deep); border-bottom: 1px solid var(--border);
+  padding: 0 24px; display: flex; align-items: center; gap: 24px;
+  height: 60px; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+.logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-icon {
+  width: 28px; height: 28px; border: 2px solid var(--gold);
+  transform: rotate(45deg); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.logo-icon::after { content: ''; width: 8px; height: 8px; background: var(--gold); display: block; }
+.logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
+.logo-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
+header .sep { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+.station-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 420px; }
+.station-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); flex-shrink: 0; }
+.buyfrom-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px; }
+.buyfrom-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); flex-shrink: 0; }
+.buyfrom-wrap select { border-color: var(--border); color: var(--text-secondary); }
+.buyfrom-wrap select.active { border-color: var(--amber); color: var(--text-primary); }
+select {
+  background: var(--bg-card); border: 1px solid var(--border-bright);
+  color: var(--text-primary); padding: 6px 30px 6px 10px; border-radius: 3px;
+  font-family: var(--body); font-size: 13px; cursor: pointer; flex: 1; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%237a98b8'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s;
+}
+select:focus { outline: none; border-color: var(--cyan); }
+select:hover { border-color: var(--cyan-dim); }
+.header-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+.btn {
+  font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  border: none; cursor: pointer; padding: 8px 16px; border-radius: 2px;
+  display: flex; align-items: center; gap: 6px; transition: all 0.15s; font-weight: 600;
+}
+.btn-primary { background: var(--gold); color: #000; }
+.btn-primary:hover { background: var(--gold-bright); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { background: var(--gold-dim); color: #333; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; color: var(--text-secondary); padding: 8px 10px; }
+.btn-ghost:hover { color: var(--text-primary); }
+.btn-success { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-dim); }
+.btn-success:hover { background: var(--green); color: #000; }
+
+.settings-bar {
+  background: var(--bg-deep); border-bottom: 1px solid var(--border);
+  padding: 0 24px; display: none; gap: 32px; align-items: center; height: 52px;
+}
+.settings-bar.open { display: flex; }
+.setting-item { display: flex; align-items: center; gap: 10px; }
+.setting-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); white-space: nowrap; }
+input[type="number"] {
+  background: var(--bg-card); border: 1px solid var(--border-bright); color: var(--text-primary);
+  padding: 4px 8px; border-radius: 2px; font-family: var(--mono); font-size: 13px; width: 70px; text-align: center;
+}
+input[type="number"]:focus { outline: none; border-color: var(--cyan); }
+.setting-hint { font-size: 10px; color: var(--text-dim); cursor: help; }
+
+.main { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.paste-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.section-header { background: var(--bg-deep); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-family: var(--display); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+.section-title::before { content: ''; width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); display: block; flex-shrink: 0; }
+.paste-area { display: flex; }
+textarea {
+  flex: 1; background: transparent; border: none; color: var(--text-primary);
+  font-family: var(--mono); font-size: 12px; padding: 16px; resize: none;
+  height: 180px; line-height: 1.6; outline: none;
+}
+textarea::placeholder { color: var(--text-dim); }
+textarea:focus { background: rgba(0,180,204,0.02); }
+.paste-hint { width: 200px; background: var(--bg-card); border-left: 1px solid var(--border); padding: 16px; flex-shrink: 0; }
+.paste-hint h4 { font-family: var(--display); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 12px; }
+.paste-hint ol { list-style: none; counter-reset: steps; display: flex; flex-direction: column; gap: 8px; }
+.paste-hint ol li { counter-increment: steps; font-size: 11px; color: var(--text-secondary); display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+.paste-hint ol li::before { content: counter(steps); font-family: var(--mono); font-size: 10px; color: var(--gold-dim); background: var(--bg-deep); border: 1px solid var(--border); min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.paste-actions { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); background: var(--bg-card); }
+.item-count { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.item-count span { color: var(--cyan); font-weight: bold; }
+
+#status-bar { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 10px 16px; display: none; align-items: center; gap: 16px; }
+#status-bar.active { display: flex; }
+.progress-track { flex: 1; height: 4px; background: var(--bg-card); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--gold)); border-radius: 2px; transition: width 0.3s; width: 0%; }
+.status-text { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); white-space: nowrap; min-width: 200px; }
+
+.results-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; display: none; }
+.results-section.visible { display: block; }
+.results-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-deep); border-bottom: 1px solid var(--border); gap: 12px; }
+.results-stats { display: flex; gap: 20px; }
+.stat { display: flex; align-items: center; gap: 6px; }
+.stat-label { color: var(--text-dim); font-family: var(--display); letter-spacing: 1px; font-size: 9px; text-transform: uppercase; }
+.stat-val { font-family: var(--mono); font-size: 11px; color: var(--text-primary); }
+.stat-val.warn { color: var(--amber); }
+.stat-val.err  { color: var(--red); }
+.stat-val.ok   { color: var(--green); }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: var(--bg-card); padding: 8px 12px; text-align: left;
+  font-family: var(--display); font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--text-dim);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+  cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 10;
+}
+th:hover { color: var(--text-secondary); }
+th.sorted { color: var(--gold); }
+th .sort-arrow { margin-left: 4px; opacity: 0.5; }
+th.sorted .sort-arrow { opacity: 1; }
+td { padding: 7px 12px; border-bottom: 1px solid rgba(30,45,71,0.5); font-size: 12px; white-space: nowrap; }
+tr:hover td { background: var(--bg-hover); }
+tr:last-child td { border-bottom: none; }
+tr.row-danger td { background: rgba(231,76,60,0.05); }
+tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
+
+.td-name { font-family: var(--body); color: var(--text-primary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.td-name a { color: var(--text-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: color 0.15s, border-color 0.15s; }
+.td-name a:hover { color: var(--cyan); border-bottom-color: var(--cyan-dim); }
+.td-num  { font-family: var(--mono); text-align: right; color: var(--text-secondary); }
+.td-price { font-family: var(--mono); text-align: right; color: var(--gold-bright); font-weight: 600; }
+.td-isk  { font-family: var(--mono); text-align: right; color: var(--text-primary); }
+.td-low  { font-family: var(--mono); text-align: right; color: var(--cyan); }
+.td-buy  { font-family: var(--mono); text-align: right; color: var(--text-dim); }
+.td-center { text-align: center; }
+
+.age-badge { display: inline-block; padding: 1px 5px; border-radius: 2px; font-family: var(--mono); font-size: 10px; font-weight: 600; }
+.age-fresh { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.25); }
+.age-mid   { background: rgba(243,156,18,0.12); color: var(--amber); border: 1px solid rgba(243,156,18,0.25); }
+.age-stale { background: rgba(100,100,120,0.12); color: var(--text-dim); border: 1px solid rgba(100,100,120,0.2); }
+
+.flag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 2px; font-size: 10px; font-family: var(--display); letter-spacing: 0.5px; text-transform: uppercase; }
+.flag-warn { background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.3); color: var(--amber); }
+.flag-err  { background: rgba(231,76,60,0.12);  border: 1px solid rgba(231,76,60,0.3);  color: var(--red); }
+.flag-info { background: rgba(0,180,204,0.08);  border: 1px solid rgba(0,180,204,0.2);  color: var(--cyan); }
+.flag-ok   { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); color: var(--green); }
+
+.override-input {
+  background: transparent; border: none; border-bottom: 1px solid var(--border-bright);
+  color: var(--gold-bright); font-family: var(--mono); font-size: 12px;
+  width: 120px; text-align: right; padding: 2px 4px; outline: none;
+}
+.override-input:focus { border-bottom-color: var(--cyan); background: rgba(0,180,204,0.05); }
+
+.copy-panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; display: none; }
+.copy-panel.visible { display: block; }
+.copy-output { font-family: var(--mono); font-size: 12px; color: var(--text-secondary); padding: 16px; white-space: pre; background: var(--bg-deep); max-height: 200px; overflow-y: auto; line-height: 1.7; border-bottom: 1px solid var(--border); }
+.copy-actions { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); }
+.copy-info { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--green-dim); color: var(--green); padding: 10px 18px; border-radius: 3px; font-family: var(--display); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; z-index: 999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.5); animation: slideIn 0.2s ease; }
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-void); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+.shimmer { background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">Multi Sell</div>
+      <span class="logo-sub">Pricing Terminal</span>
+      <span class="logo-sub" style="font-size:8px;letter-spacing:1.5px;color:var(--gold-dim);margin-top:1px">by RedSquared · Claude AI</span>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="station-wrap">
+    <span class="station-label">Selling At</span>
+    <select id="station-select">
+      <option value="" disabled selected>— Select Station —</option>
+      <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
+      <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
+      <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
+      <option value="60004588" data-region="10000030" data-short="Rens">Rens VI - Moon 8 - Brutor Tribe Treasury</option>
+      <option value="60005686" data-region="10000042" data-short="Hek">Hek VIII - Moon 12 - Boundless Creation Factory</option>
+      <option value="60015148" data-region="11000031" data-short="Thera">Thera XII - The Sanctuary Institute of Paleocybernetics</option>
+    </select>
+  </div>
+  <div class="sep"></div>
+  <div class="buyfrom-wrap">
+    <span class="buyfrom-label">Bought From <span style="font-size:8px;opacity:0.5;font-family:var(--body);letter-spacing:0">(optional)</span></span>
+    <select id="buyfrom-select">
+      <option value="">— None —</option>
+      <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
+      <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
+      <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
+      <option value="60004588" data-region="10000030" data-short="Rens">Rens VI - Moon 8 - Brutor Tribe Treasury</option>
+      <option value="60005686" data-region="10000042" data-short="Hek">Hek VIII - Moon 12 - Boundless Creation Factory</option>
+      <option value="60015148" data-region="11000031" data-short="Thera">Thera XII - The Sanctuary Institute of Paleocybernetics</option>
+    </select>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">↺ Reset</button>
+    <button class="btn btn-ghost" id="settings-toggle">⚙ Settings</button>
+    <button class="btn btn-primary" id="fetch-btn" disabled>▶ Fetch Prices</button>
+  </div>
+</header>
+
+<div class="settings-bar" id="settings-bar">
+  <div class="setting-item">
+    <span class="setting-label">Undercut Ticks</span>
+    <input type="number" id="setting-undercut" value="2" min="1" max="20">
+    <span class="setting-hint" title="How many price ticks to undercut the lowest sell order.">?</span>
+  </div>
+  <div class="sep" style="height:28px;"></div>
+  <div class="setting-item">
+    <span class="setting-label">Markup %</span>
+    <input type="number" id="setting-markup" value="25" min="0" max="200" step="5">
+    <span class="setting-hint" title="Percentage markup when falling back to Jita or Amarr pricing.">?</span>
+  </div>
+  <div class="sep" style="height:28px;"></div>
+  <div class="setting-item">
+    <span class="setting-label">Gap Threshold</span>
+    <input type="number" id="setting-threshold" value="10" min="1" max="100">
+    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this many ticks — but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
+  </div>
+  <div class="sep" style="height:28px;"></div>
+  <div class="setting-item">
+    <span class="setting-label">Buy Floor Buffer %</span>
+    <input type="number" id="setting-buy-buffer" value="3" min="0" max="50" step="1">
+    <span class="setting-hint" title="Hard floor: your price will never drop below (highest buy order × (1 + buffer%)). Prevents accidentally fulfilling a buy order.">?</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="paste-section">
+    <div class="section-header">
+      <div class="section-title">EVE Multi Sell Export</div>
+    </div>
+    <div class="paste-area">
+      <textarea id="paste-input" placeholder="Paste your EVE Multi Sell export here...&#10;&#10;In EVE: Select items → Right-click → Sell Items → Export button → paste here."></textarea>
+      <div class="paste-hint">
+        <h4>How to export</h4>
+        <ol>
+          <li>Select items to sell in EVE</li>
+          <li>Right-click → <em>Sell Items (n)</em></li>
+          <li>Click <strong>Export</strong> in the sell window</li>
+          <li>Paste the result here</li>
+          <li>Select your station above</li>
+          <li>Click <strong>Fetch Prices</strong></li>
+          <li>Copy output → <em>Import Prices…</em> in EVE</li>
+        </ol>
+      </div>
+    </div>
+    <div class="paste-actions">
+      <div class="item-count" id="item-count">Paste export to begin</div>
+      <button class="btn btn-ghost" id="clear-btn">✕ Clear</button>
+    </div>
+  </div>
+
+  <div id="status-bar">
+    <span class="status-text" id="status-text">Fetching market data...</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)" id="progress-count">0 / 0</span>
+  </div>
+
+  <div class="results-section" id="results-section">
+    <div class="section-header" style="gap:16px;">
+      <div class="section-title">Calculated Prices</div>
+      <div class="results-stats" id="results-stats"></div>
+      <button class="btn btn-ghost" id="refresh-btn" style="margin-left:auto">↺ Re-fetch</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="name">Item Name <span class="sort-arrow">↕</span></th>
+            <th data-col="qty" style="text-align:right">Qty <span class="sort-arrow">↕</span></th>
+            <th data-col="lowest" style="text-align:right">Lowest Sell <span class="sort-arrow">↕</span></th>
+            <th data-col="lowestage" style="text-align:center">Age <span class="sort-arrow">↕</span></th>
+            <th data-col="second" style="text-align:right">2nd Lowest <span class="sort-arrow">↕</span></th>
+            <th data-col="secondage" style="text-align:center">Age <span class="sort-arrow">↕</span></th>
+            <th data-col="buy" style="text-align:right">Highest Buy <span class="sort-arrow">↕</span></th>
+            <th data-col="newprice" style="text-align:right">Your Price <span class="sort-arrow">↕</span></th>
+            <th data-col="totalisk" style="text-align:right">Total ISK <span class="sort-arrow">↕</span></th>
+            <th data-col="override" style="text-align:center">Override</th>
+            <th data-col="flags" style="text-align:center">Flags <span class="sort-arrow">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="copy-panel" id="copy-panel">
+    <div class="section-header">
+      <div class="section-title">EVE Import — Ready to Paste</div>
+    </div>
+    <div class="copy-output" id="copy-output"></div>
+    <div class="copy-actions">
+      <span class="copy-info" id="copy-info"></span>
+      <button class="btn btn-success" id="copy-btn">⎘ Copy All</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+const ESI_BASE = 'https://esi.evetech.net/latest';
+const JITA_STATION = 60003760;
+const JITA_REGION  = 10000002;
+const AMARR_STATION = 60008494;
+const AMARR_REGION  = 10000043;
+const GAP_AGE_CUTOFF_DAYS = 7;
+
+let parsedItems = [];
+let results = [];
+let sortCol = 'name';
+let sortDir = 1;
+
+function getSettings() {
+  return {
+    undercutTicks: parseInt(document.getElementById('setting-undercut').value) || 2,
+    markupPct:     (parseInt(document.getElementById('setting-markup').value) || 25) / 100,
+    gapThreshold:  parseInt(document.getElementById('setting-threshold').value) || 10,
+    buyBuffer:     (parseInt(document.getElementById('setting-buy-buffer').value) || 3) / 100,
+  };
+}
+
+function getSelectedStation() {
+  const sel = document.getElementById('station-select');
+  const opt = sel.options[sel.selectedIndex];
+  return { stationId: parseInt(sel.value), regionId: parseInt(opt.dataset.region), name: opt.dataset.short };
+}
+
+function getBuyFromStation() {
+  const sel = document.getElementById('buyfrom-select');
+  if (!sel.value) return null;
+  const opt = sel.options[sel.selectedIndex];
+  return { stationId: parseInt(sel.value), regionId: parseInt(opt.dataset.region), name: opt.dataset.short };
+}
+
+// Severity score: 2 = has error, 1 = has warning only, 0 = clean
+function flagSeverity(r) {
+  if (r.flags.some(f => f.type === 'err'))  return 2;
+  if (r.flags.some(f => f.type === 'warn')) return 1;
+  return 0;
+}
+
+// ── PARSE ──────────────────────────────────────────────
+function parseEveExport(text) {
+  const items = [];
+  for (const line of text.trim().split('\n')) {
+    const parts = line.split('\t');
+    if (parts.length < 2) continue;
+    const typeId = parseInt(parts[0]);
+    if (isNaN(typeId) || typeId <= 0) continue;
+    const name = (parts[1] || '').trim();
+    const qty  = parseInt(parts[2]) || 1;
+    if (name) items.push({ typeId, name, qty });
+  }
+  return items;
+}
+
+// ── DATE HELPERS ───────────────────────────────────────
+function orderAgeDays(issuedStr) {
+  if (!issuedStr) return null;
+  return (Date.now() - new Date(issuedStr).getTime()) / 86400000;
+}
+
+function formatAge(days) {
+  if (days === null) return null;
+  if (days < 1)  return '<1d';
+  if (days < 30) return `${Math.floor(days)}d`;
+  return `${Math.floor(days / 30)}mo`;
+}
+
+function ageBadge(days) {
+  if (days === null) return '<span class="td-num" style="color:var(--text-dim)">—</span>';
+  const label = formatAge(days);
+  const cls = days > 30 ? 'age-stale' : days > 7 ? 'age-mid' : 'age-fresh';
+  return `<span class="age-badge ${cls}">${label}</span>`;
+}
+
+// ── MATH ───────────────────────────────────────────────
+function getTickSize(price) {
+  if (!price || price <= 0) return 1;
+  return Math.pow(10, Math.max(0, Math.floor(Math.log10(price)) - 3));
+}
+
+function formatISK(val) {
+  if (val == null || isNaN(val)) return '—';
+  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatISKCompact(val) {
+  if (val == null || isNaN(val)) return '—';
+  if (val >= 1e9) return (val / 1e9).toFixed(2) + 'B';
+  if (val >= 1e6) return (val / 1e6).toFixed(2) + 'M';
+  if (val >= 1e3) return (val / 1e3).toFixed(2) + 'K';
+  return val.toFixed(2);
+}
+
+// ── ESI ────────────────────────────────────────────────
+async function fetchOrders(regionId, typeId, orderType = 'sell') {
+  try {
+    let all = [], page = 1;
+    while (true) {
+      const res = await fetch(`${ESI_BASE}/markets/${regionId}/orders/?order_type=${orderType}&type_id=${typeId}&page=${page}&datasource=tranquility`);
+      if (!res.ok) break;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) break;
+      all = all.concat(data);
+      if (page >= parseInt(res.headers.get('x-pages') || '1')) break;
+      page++;
+    }
+    return all;
+  } catch { return []; }
+}
+
+async function getStationOrders(typeId, stationId, regionId) {
+  const [sells, buys] = await Promise.all([
+    fetchOrders(regionId, typeId, 'sell'),
+    fetchOrders(regionId, typeId, 'buy'),
+  ]);
+  const ss = sells.filter(o => o.location_id === stationId).sort((a, b) => a.price - b.price);
+  const bs = buys.filter(o => o.location_id === stationId).sort((a, b) => b.price - a.price);
+  return {
+    lowestSell:          ss[0]?.price  ?? null,
+    lowestSellIssued:    ss[0]?.issued ?? null,
+    secondLowest:        ss[1]?.price  ?? null,
+    secondLowestIssued:  ss[1]?.issued ?? null,
+    highestBuy:          bs[0]?.price  ?? null,
+  };
+}
+
+async function getFallbackPrice(typeId, excludeStationId) {
+  const jita = await fetchOrders(JITA_REGION, typeId, 'sell');
+  const js = jita.filter(o => o.location_id === JITA_STATION).sort((a, b) => a.price - b.price);
+  if (js.length) return { price: js[0].price, source: 'Jita' };
+  if (excludeStationId !== AMARR_STATION) {
+    const amarr = await fetchOrders(AMARR_REGION, typeId, 'sell');
+    const as_ = amarr.filter(o => o.location_id === AMARR_STATION).sort((a, b) => a.price - b.price);
+    if (as_.length) return { price: as_[0].price, source: 'Amarr' };
+  }
+  return { price: null, source: null };
+}
+
+// ── MAIN FETCH ─────────────────────────────────────────
+async function fetchAllPrices() {
+  const station  = getSelectedStation();
+  const settings = getSettings();
+
+  document.getElementById('status-bar').classList.add('active');
+  document.getElementById('results-section').classList.remove('visible');
+  document.getElementById('copy-panel').classList.remove('visible');
+  document.getElementById('fetch-btn').disabled = true;
+  document.getElementById('progress-fill').style.width = '0%';
+
+  const total = parsedItems.length;
+  results = [];
+
+  // Skeleton
+  document.getElementById('results-tbody').innerHTML = parsedItems.map((item, i) =>
+    `<tr id="row-${i}">
+      <td class="td-name">${escHtml(item.name)}</td>
+      <td class="td-num">${item.qty.toLocaleString()}</td>
+      <td colspan="10" class="shimmer" style="color:transparent;font-family:var(--mono)">loading...</td>
+    </tr>`
+  ).join('');
+  document.getElementById('results-section').classList.add('visible');
+
+  for (let i = 0; i < parsedItems.length; i++) {
+    const item = parsedItems[i];
+    document.getElementById('progress-fill').style.width = `${(i + 1) / total * 100}%`;
+    document.getElementById('progress-count').textContent = `${i + 1} / ${total}`;
+    document.getElementById('status-text').textContent = `Fetching: ${item.name}`;
+
+    let result = {
+      ...item,
+      lowestSell: null, lowestSellAgeDays: null,
+      secondLowest: null, secondLowestAgeDays: null,
+      highestBuy: null, newPrice: null, buyFromLowest: null,
+      source: station.name, fallback: false, flags: [], override: null,
+    };
+
+    try {
+      const mkt = await getStationOrders(item.typeId, station.stationId, station.regionId);
+      let priceSource = mkt.lowestSell;
+      let sourceLabel = station.name;
+
+      if (priceSource === null) {
+        const fb = await getFallbackPrice(item.typeId, station.stationId);
+        if (fb.price !== null) {
+          priceSource = fb.price * (1 + settings.markupPct);
+          sourceLabel = `${fb.source} +${Math.round(settings.markupPct * 100)}%`;
+          result.fallback = true;
+          result.flags.push({ type: 'info', text: sourceLabel });
+        } else {
+          result.flags.push({ type: 'err', text: 'No Data' });
+        }
+      }
+
+      const tick = getTickSize(priceSource);
+      let newPrice = priceSource !== null
+        ? Math.max(0.01, priceSource - settings.undercutTicks * tick)
+        : null;
+
+      // ── HARD BUY ORDER FLOOR ─────────────────────────
+      // Prevents the "oops I sold into a buy order" scenario.
+      // Price is clamped above (highestBuy × (1 + buffer)).
+      if (newPrice !== null && mkt.highestBuy !== null) {
+        const floor = mkt.highestBuy * (1 + settings.buyBuffer);
+        if (newPrice <= mkt.highestBuy) {
+          // Would fill the buy order outright — hard clamp + loud warning
+          newPrice = floor + tick;
+          result.flags.push({ type: 'err', text: '⚠ Buy Floor' });
+        } else if (newPrice < floor) {
+          // Within the buffer zone — softer warning, still clamp
+          newPrice = floor + tick;
+          result.flags.push({ type: 'warn', text: 'Near Buy' });
+        }
+      }
+
+      result.lowestSell         = mkt.lowestSell;
+      result.lowestSellAgeDays  = orderAgeDays(mkt.lowestSellIssued);
+      result.secondLowest       = mkt.secondLowest;
+      result.secondLowestAgeDays = orderAgeDays(mkt.secondLowestIssued);
+      result.highestBuy         = mkt.highestBuy;
+      result.newPrice           = newPrice;
+      result.source             = sourceLabel;
+
+      // ── BUY FROM CHECK ───────────────────────────────
+      // If user specified where they bought from, fetch that
+      // station's current lowest sell price. If our sell price
+      // is below it, they'd make more just selling back at source.
+      const buyFrom = getBuyFromStation();
+      if (buyFrom && buyFrom.stationId !== station.stationId) {
+        const bfMkt = await getStationOrders(item.typeId, buyFrom.stationId, buyFrom.regionId);
+        result.buyFromLowest = bfMkt.lowestSell;
+        if (bfMkt.lowestSell !== null && newPrice !== null && newPrice < bfMkt.lowestSell) {
+          result.flags.push({ type: 'warn', text: `Below ${buyFrom.name}` });
+        }
+      }
+
+      // ── GAP WARNING (age-aware) ───────────────────────
+      // Only flag if the 2nd lowest is fresh (< 7 days).
+      // A 30-day-old ghost listing isn't real competition.
+      if (mkt.lowestSell && mkt.secondLowest) {
+        const age2 = result.secondLowestAgeDays;
+        const stale = age2 !== null && age2 > GAP_AGE_CUTOFF_DAYS;
+        if (!stale) {
+          const gap = mkt.secondLowest - mkt.lowestSell;
+          if (gap > settings.gapThreshold * tick) {
+            result.flags.push({ type: 'warn', text: `Gap ×${Math.round(gap / tick)}` });
+          }
+        }
+      }
+
+    } catch {
+      result.flags.push({ type: 'err', text: 'Error' });
+    }
+
+    results.push(result);
+    updateRow(i, result);
+  }
+
+  document.getElementById('status-bar').classList.remove('active');
+  document.getElementById('fetch-btn').disabled = false;
+  renderStats();
+  renderCopyPanel();
+}
+
+// ── RENDER ─────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function flagHtml(flags) {
+  if (!flags.length) return '<span class="flag flag-ok">✓ OK</span>';
+  return flags.map(f => `<span class="flag flag-${f.type}">${f.text}</span>`).join(' ');
+}
+
+function effectivePrice(r) {
+  const ov = r.override;
+  if (ov !== null && ov !== '' && !isNaN(parseFloat(ov))) return parseFloat(ov);
+  return r.newPrice;
+}
+
+function updateRow(i, result) {
+  const row = document.getElementById(`row-${i}`);
+  if (!row) return;
+  const price    = effectivePrice(result);
+  const total    = price !== null ? price * result.qty : null;
+  const danger   = result.flags.some(f => f.text.includes('Buy Floor'));
+
+  row.className = danger ? 'row-danger' : '';
+  row.innerHTML = `
+    <td class="td-name" title="${escHtml(result.name)}"><a href="https://evetycoon.com/market/${result.typeId}" target="_blank" rel="noopener">${escHtml(result.name)}</a></td>
+    <td class="td-num">${result.qty.toLocaleString()}</td>
+    <td class="td-low">${result.lowestSell !== null ? formatISK(result.lowestSell) : '—'}</td>
+    <td class="td-center">${ageBadge(result.lowestSellAgeDays)}</td>
+    <td class="td-num">${result.secondLowest !== null ? formatISK(result.secondLowest) : '—'}</td>
+    <td class="td-center">${ageBadge(result.secondLowestAgeDays)}</td>
+    <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : '—'}</td>
+    <td class="td-price">${price !== null ? formatISK(price) : '—'}</td>
+    <td class="td-isk" title="${total !== null ? formatISK(total) : ''}">${total !== null ? formatISKCompact(total) : '—'}</td>
+    <td class="td-center">
+      <input class="override-input" data-idx="${i}" placeholder="override..."
+             value="${result.override !== null ? result.override : ''}">
+    </td>
+    <td class="td-center">${flagHtml(result.flags)}</td>
+  `;
+  row.querySelector('.override-input').addEventListener('input', onOverrideChange);
+  row.querySelector('.override-input').addEventListener('change', () => renderCopyPanel());
+}
+
+function onOverrideChange(e) {
+  const idx = parseInt(e.target.dataset.idx);
+  results[idx].override = e.target.value.trim() || null;
+  const price = effectivePrice(results[idx]);
+  const total = price !== null ? price * results[idx].qty : null;
+  const row   = document.getElementById(`row-${idx}`);
+  row.cells[7].textContent = price !== null ? formatISK(price) : '—';
+  row.cells[8].textContent = total !== null ? formatISKCompact(total) : '—';
+  row.cells[8].title       = total !== null ? formatISK(total) : '';
+  renderStats();
+  renderCopyPanel();
+}
+
+function renderStats() {
+  const warnings  = results.filter(r => r.flags.some(f => f.type === 'warn')).length;
+  const errors    = results.filter(r => r.flags.some(f => f.type === 'err')).length;
+  const fallbacks = results.filter(r => r.fallback).length;
+  const totalVal  = results.reduce((s, r) => { const p = effectivePrice(r); return s + (p ? p * r.qty : 0); }, 0);
+
+  document.getElementById('results-stats').innerHTML = `
+    <div class="stat"><span class="stat-label">Items</span><span class="stat-val">${results.length}</span></div>
+    <div class="stat"><span class="stat-label">Total ISK</span><span class="stat-val">${formatISKCompact(totalVal)}</span></div>
+    <div class="stat"><span class="stat-label">Warnings</span><span class="stat-val ${warnings ? 'warn' : 'ok'}">${warnings}</span></div>
+    <div class="stat"><span class="stat-label">No Data</span><span class="stat-val ${errors ? 'err' : 'ok'}">${errors}</span></div>
+    <div class="stat"><span class="stat-label">Fallback</span><span class="stat-val ${fallbacks ? 'warn' : 'ok'}">${fallbacks}</span></div>
+  `;
+}
+
+function buildCopyText() {
+  return results.filter(r => effectivePrice(r) !== null)
+    .map(r => `${r.name}\t${formatISK(effectivePrice(r))}`).join('\n');
+}
+
+function renderCopyPanel() {
+  const skipped = results.filter(r => effectivePrice(r) === null).length;
+  document.getElementById('copy-output').textContent = buildCopyText();
+  document.getElementById('copy-info').textContent =
+    `${results.length - skipped} items ready${skipped ? ` · ${skipped} skipped (no data)` : ''}`;
+  document.getElementById('copy-panel').classList.add('visible');
+}
+
+// ── EVENTS ─────────────────────────────────────────────
+document.getElementById('paste-input').addEventListener('input', function() {
+  const text = this.value.trim();
+  parsedItems = text ? parseEveExport(text) : [];
+  const count = parsedItems.length;
+  document.getElementById('item-count').innerHTML = !text
+    ? 'Paste export to begin'
+    : count > 0
+      ? `<span>${count}</span> item${count !== 1 ? 's' : ''} parsed`
+      : 'No valid items found — check format';
+  updateFetchBtn();
+});
+
+document.getElementById('station-select').addEventListener('change', updateFetchBtn);
+
+function updateFetchBtn() {
+  const hasItems   = parsedItems.length > 0;
+  const hasStation = document.getElementById('station-select').value !== '';
+  document.getElementById('fetch-btn').disabled = !(hasItems && hasStation);
+}
+
+document.getElementById('fetch-btn').addEventListener('click', fetchAllPrices);
+document.getElementById('refresh-btn').addEventListener('click', fetchAllPrices);
+
+document.getElementById('buyfrom-select').addEventListener('change', function() {
+  this.classList.toggle('active', this.value !== '');
+});
+
+function resetApp() {
+  // Textarea + parsed state
+  document.getElementById('paste-input').value = '';
+  parsedItems = []; results = [];
+  document.getElementById('item-count').innerHTML = 'Paste export to begin';
+  document.getElementById('fetch-btn').disabled = true;
+  // Reset both station dropdowns
+  document.getElementById('station-select').value = '';
+  const bf = document.getElementById('buyfrom-select');
+  bf.value = ''; bf.classList.remove('active');
+  // Hide result panels
+  ['results-section','copy-panel'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('status-bar').classList.remove('active');
+  // Close settings bar
+  document.getElementById('settings-bar').classList.remove('open');
+  document.getElementById('settings-toggle').style.color = '';
+}
+document.getElementById('clear-btn').addEventListener('click', resetApp);
+document.getElementById('reset-btn').addEventListener('click', resetApp);
+
+document.getElementById('settings-toggle').addEventListener('click', function() {
+  document.getElementById('settings-bar').classList.toggle('open');
+  this.style.color = document.getElementById('settings-bar').classList.contains('open') ? 'var(--gold)' : '';
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  navigator.clipboard.writeText(buildCopyText()).then(() => {
+    const t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+  });
+});
+
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+    document.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-arrow').textContent = sortDir === 1 ? '↑' : '↓';
+    const colMap = {
+      name: r => r.name, qty: r => r.qty,
+      lowest: r => r.lowestSell ?? -Infinity,
+      lowestage: r => r.lowestSellAgeDays ?? Infinity,
+      second: r => r.secondLowest ?? -Infinity,
+      secondage: r => r.secondLowestAgeDays ?? Infinity,
+      buy: r => r.highestBuy ?? -Infinity,
+      newprice: r => effectivePrice(r) ?? -Infinity,
+      totalisk: r => (effectivePrice(r) ?? 0) * r.qty,
+      flags: r => flagSeverity(r),
+    };
+    results.sort((a, b) => {
+      const av = colMap[col]?.(a) ?? 0, bv = colMap[col]?.(b) ?? 0;
+      return av < bv ? -sortDir : av > bv ? sortDir : 0;
+    });
+    document.getElementById('results-tbody').innerHTML = results.map((r,i) => `<tr id="row-${i}"></tr>`).join('');
+    results.forEach((r, i) => updateRow(i, r));
+    renderCopyPanel();
+  });
+});
+</script>
+</body>
+</html>
