@@ -58,7 +58,7 @@ header {
 header .sep { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
 .station-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 420px; }
 .station-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); flex-shrink: 0; }
-.buyfrom-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px; }
+.buyfrom-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px; margin-left: 20px; }
 .buyfrom-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); flex-shrink: 0; }
 .buyfrom-wrap select { border-color: var(--border); color: var(--text-secondary); }
 .buyfrom-wrap select.active { border-color: var(--amber); color: var(--text-primary); }
@@ -746,7 +746,15 @@ function resetApp() {
   document.getElementById('settings-bar').classList.remove('open');
   document.getElementById('settings-toggle').style.color = '';
 }
-document.getElementById('clear-btn').addEventListener('click', resetApp);
+function clearInput() {
+  document.getElementById('paste-input').value = '';
+  parsedItems = []; results = [];
+  document.getElementById('item-count').innerHTML = 'Paste export to begin';
+  document.getElementById('fetch-btn').disabled = true;
+  ['results-section', 'copy-panel'].forEach(id => document.getElementById(id).classList.remove('visible'));
+  document.getElementById('status-bar').classList.remove('active');
+}
+document.getElementById('clear-btn').addEventListener('click', clearInput);
 document.getElementById('reset-btn').addEventListener('click', resetApp);
 
 document.getElementById('settings-toggle').addEventListener('click', function() {
