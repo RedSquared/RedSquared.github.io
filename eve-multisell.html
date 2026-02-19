@@ -316,17 +316,17 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
       <table>
         <thead>
           <tr>
-            <th data-col="name">Item Name <span class="sort-arrow">↕</span></th>
-            <th data-col="qty" style="text-align:right">Qty <span class="sort-arrow">↕</span></th>
-            <th data-col="lowest" style="text-align:right">Lowest Sell <span class="sort-arrow">↕</span></th>
-            <th data-col="lowestage" style="text-align:center">Age <span class="sort-arrow">↕</span></th>
-            <th data-col="second" style="text-align:right">2nd Lowest <span class="sort-arrow">↕</span></th>
-            <th data-col="secondage" style="text-align:center">Age <span class="sort-arrow">↕</span></th>
-            <th data-col="buy" style="text-align:right">Highest Buy <span class="sort-arrow">↕</span></th>
-            <th data-col="newprice" style="text-align:right">Your Price <span class="sort-arrow">↕</span></th>
-            <th data-col="totalisk" style="text-align:right">Total ISK <span class="sort-arrow">↕</span></th>
-            <th data-col="override" style="text-align:center">Override</th>
-            <th data-col="flags" style="text-align:center">Flags <span class="sort-arrow">↕</span></th>
+            <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">↕</span></th>
+            <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">↕</span></th>
+            <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">↕</span></th>
+            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is — older orders may be ghost listings">Age <span class="sort-arrow">↕</span></th>
+            <th data-col="second" style="text-align:right" title="The second cheapest sell order — the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">↕</span></th>
+            <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">↕</span></th>
+            <th data-col="buy" style="text-align:right" title="The best buy order at this station — your hard price floor">Highest Buy <span class="sort-arrow">↕</span></th>
+            <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">↕</span></th>
+            <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">↕</span></th>
+            <th data-col="override" style="text-align:center" title="Enter a custom price to override the calculated one for this item">Override</th>
+            <th data-col="flags" style="text-align:center" title="Market condition warnings — hover each flag for details">Flags <span class="sort-arrow">↕</span></th>
           </tr>
         </thead>
         <tbody id="results-tbody"></tbody>
@@ -539,9 +539,9 @@ async function fetchAllPrices() {
           priceSource = fb.price * (1 + settings.markupPct);
           sourceLabel = `${fb.source} +${Math.round(settings.markupPct * 100)}%`;
           result.fallback = true;
-          result.flags.push({ type: 'info', text: sourceLabel });
+          result.flags.push({ type: 'info', text: sourceLabel, tooltip: `No orders at this station. Price is based on ${fb.source} lowest sell with your markup applied.` });
         } else {
-          result.flags.push({ type: 'err', text: 'No Data' });
+          result.flags.push({ type: 'err', text: 'No Orders', tooltip: 'No sell orders found here or at any fallback market (Jita/Amarr). Price cannot be determined.' });
         }
       }
 
@@ -558,11 +558,11 @@ async function fetchAllPrices() {
         if (newPrice <= mkt.highestBuy) {
           // Would fill the buy order outright — hard clamp + loud warning
           newPrice = floor + tick;
-          result.flags.push({ type: 'err', text: '⚠ Buy Floor' });
+          result.flags.push({ type: 'err', text: 'Fills Buy Order', tooltip: 'Your calculated price is at or below the highest buy order. It has been raised above the buy floor to prevent accidentally selling into a buy order.' });
         } else if (newPrice < floor) {
           // Within the buffer zone — softer warning, still clamp
           newPrice = floor + tick;
-          result.flags.push({ type: 'warn', text: 'Near Buy' });
+          result.flags.push({ type: 'warn', text: 'Near Buy Order', tooltip: 'Your price is within the buy floor buffer zone and has been nudged up. Check the Highest Buy column and adjust if needed.' });
         }
       }
 
@@ -583,7 +583,7 @@ async function fetchAllPrices() {
         const bfMkt = await getStationOrders(item.typeId, buyFrom.stationId, buyFrom.regionId);
         result.buyFromLowest = bfMkt.lowestSell;
         if (bfMkt.lowestSell !== null && newPrice !== null && newPrice < bfMkt.lowestSell) {
-          result.flags.push({ type: 'warn', text: `Below ${buyFrom.name}` });
+          result.flags.push({ type: 'warn', text: `Better at ${buyFrom.name}`, tooltip: `Your sell price here is lower than the current lowest sell at ${buyFrom.name}. You may get more by selling there instead.` });
         }
       }
 
@@ -596,13 +596,13 @@ async function fetchAllPrices() {
         if (!stale) {
           const gap = mkt.secondLowest - mkt.lowestSell;
           if (gap > settings.gapThreshold * tick) {
-            result.flags.push({ type: 'warn', text: `Gap ×${Math.round(gap / tick)}` });
+            result.flags.push({ type: 'warn', text: 'Large Price Gap', tooltip: 'There is a large gap between the cheapest and 2nd cheapest seller. Consider buying out the low listing and relisting your item at a higher price closer to the 2nd lowest.' });
           }
         }
       }
 
     } catch {
-      result.flags.push({ type: 'err', text: 'Error' });
+      result.flags.push({ type: 'err', text: 'Fetch Failed', tooltip: 'An error occurred while fetching market data. Try re-fetching.' });
     }
 
     results.push(result);
@@ -621,8 +621,10 @@ function escHtml(s) {
 }
 
 function flagHtml(flags) {
-  if (!flags.length) return '<span class="flag flag-ok">✓ OK</span>';
-  return flags.map(f => `<span class="flag flag-${f.type}">${f.text}</span>`).join(' ');
+  if (!flags.length) return '<span class="flag flag-ok" title="No issues detected">✓ Clear</span>';
+  return flags.map(f =>
+    `<span class="flag flag-${f.type}"${f.tooltip ? ` title="${escHtml(f.tooltip)}"` : ''}>${f.text}</span>`
+  ).join(' ');
 }
 
 function effectivePrice(r) {
