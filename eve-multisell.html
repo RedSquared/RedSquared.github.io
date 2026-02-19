@@ -648,7 +648,7 @@ function updateRow(i, result) {
     <td class="td-center">${ageBadge(result.secondLowestAgeDays)}</td>
     <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : '—'}</td>
     <td class="td-price">${price !== null ? formatISK(price) : '—'}</td>
-    <td class="td-isk" title="${total !== null ? formatISK(total) : ''}">${total !== null ? formatISKCompact(total) : '—'}</td>
+    <td class="td-isk">${total !== null ? formatISK(total) : '—'}</td>
     <td class="td-center">
       <input class="override-input" data-idx="${i}" placeholder="override..."
              value="${result.override !== null ? result.override : ''}">
@@ -666,8 +666,7 @@ function onOverrideChange(e) {
   const total = price !== null ? price * results[idx].qty : null;
   const row   = document.getElementById(`row-${idx}`);
   row.cells[7].textContent = price !== null ? formatISK(price) : '—';
-  row.cells[8].textContent = total !== null ? formatISKCompact(total) : '—';
-  row.cells[8].title       = total !== null ? formatISK(total) : '';
+  row.cells[8].textContent = total !== null ? formatISK(total) : '—';
   renderStats();
   renderCopyPanel();
 }
