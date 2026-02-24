@@ -53,6 +53,9 @@ header {
   justify-content: center; flex-shrink: 0;
 }
 .logo-icon::after { content: ''; width: 8px; height: 8px; background: var(--gold); display: block; }
+a.logo-icon { text-decoration: none; transition: border-color 0.15s; }
+a.logo-icon:hover { border-color: var(--gold-bright); }
+a.logo-icon:hover::after { background: var(--gold-bright); }
 .logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
 .logo-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
 header .sep { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
@@ -220,7 +223,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 ============================================================ -->
 <header>
   <div class="logo">
-    <div class="logo-icon"></div>
+    <a href="index.html" class="logo-icon" title="Back to tools"></a>
     <div>
       <div class="logo-text">Multi Sell</div>
       <span class="logo-sub">Pricing Terminal</span>
@@ -254,6 +257,8 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </select>
   </div>
   <div class="header-actions">
+    <a href="EveOrders.html" class="btn btn-ghost" style="text-decoration:none" title="Go to EVE Orders Dashboard">Orders</a>
+    <span class="sep"></span>
     <a href="EveOrders.html" class="btn btn-ghost" style="text-decoration:none" title="Go to EVE Orders Dashboard">Orders</a>
     <span class="sep"></span>
     <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">↺ Reset</button>
