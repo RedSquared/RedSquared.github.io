@@ -103,7 +103,7 @@
       width: 100%;
     }
     .login-card h2 { font-size: 22px; color: var(--gold-bright); font-family: var(--display); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-    .login-card > p { color: var(--text2); margin-bottom: 24px; line-height: 1.65; }
+    .login-card > p { color: var(--text2); margin-bottom: 24px; line-height: 1.65; padding-inline: 6px; }
 #login-error { color: var(--red); font-size: 13px; margin-bottom: 12px; display: none; }
 
     /* ── Dashboard ── */
@@ -496,7 +496,24 @@
       font-size: 14px;
       font-weight: 700;
       border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      font-family: var(--mono);
+      margin-top: 24px;
+    }
+    footer a { color: var(--text-dim); text-decoration: none; }
+    footer a:hover { color: var(--text2); }
 
     /* ── Help modal ── */
     .help-overlay {
@@ -571,6 +588,7 @@
     <div>
       <div class="logo-text">EVE Orders</div>
       <span class="logo-sub">Order Dashboard</span>
+      <span class="logo-sub" style="font-size:8px;letter-spacing:1.5px;color:var(--gold-dim);margin-top:1px">by RedSquared · Claude AI</span>
     </div>
   </div>
   <div id="header-wallets"></div>
@@ -753,6 +771,11 @@
     </div>
   </div>
 </div>
+
+<footer>
+  built by <a href="https://github.com/RedSquared" target="_blank" rel="noopener">RedSquared</a>
+  &nbsp;·&nbsp; powered by Claude AI
+</footer>
 
 <script>
 // =============================================================
