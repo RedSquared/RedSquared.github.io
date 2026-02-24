@@ -4,20 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EVE Orders Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:      #070710;
-      --bg2:     #0e0e1c;
-      --bg3:     #141428;
-      --border:  #232340;
-      --text:    #c0c8d8;
-      --text2:   #68707e;
-      --gold:    #c6a227;
-      --blue:    #4a9eed;
-      --green:   #3dba6e;
-      --red:     #d14040;
-      --orange:  #e08820;
-      --purple:  #9b6fd4;
+      --bg:          #06080f;
+      --bg2:         #0b0f1a;
+      --bg3:         #141b28;
+      --bg-panel:    #0f1520;
+      --bg-hover:    #1a2338;
+      --border:      #1e2d47;
+      --border-bright: #2a4070;
+      --text:        #d8e4f0;
+      --text2:       #7a98b8;
+      --text-dim:    #3d5470;
+      --gold:        #c8960c;
+      --gold-bright: #f0b429;
+      --gold-dim:    #7a5a08;
+      --cyan:        #00b4cc;
+      --cyan-dim:    #006a7a;
+      --blue:        #4a9eed;
+      --green:       #2ecc71;
+      --green-dim:   #1a7a44;
+      --red:         #e74c3c;
+      --red-dim:     #7a1a12;
+      --orange:      #f39c12;
+      --purple:      #9b6fd4;
+      --display:     'Orbitron', sans-serif;
+      --body:        'Exo 2', sans-serif;
+      --mono:        'Share Tech Mono', monospace;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,10 +40,13 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: var(--body);
       font-size: 14px;
       line-height: 1.5;
       min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(0,100,180,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(200,150,12,0.04) 0%, transparent 50%);
     }
 
     /* ── Header ── */
@@ -36,29 +54,33 @@
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
       padding: 0 20px;
-      height: 52px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.5);
     }
-    .logo { font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; user-select: none; }
-    .logo .eve    { color: var(--gold); }
-    .logo .orders { color: var(--blue); }
+    .logo { display: flex; align-items: center; gap: 10px; user-select: none; flex-shrink: 0; }
+    .logo-icon { width: 28px; height: 28px; border: 2px solid var(--gold); transform: rotate(45deg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon::after { content: ''; width: 8px; height: 8px; background: var(--gold); display: block; }
+    .logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
+    .logo-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
     .char-info { display: flex; align-items: center; gap: 10px; }
     .char-info img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); }
     .char-name { font-weight: 600; }
 
     /* ── Buttons ── */
-    button { cursor: pointer; font-family: inherit; font-size: 14px; border-radius: 4px; border: none; transition: all 0.15s; }
-    .btn         { padding: 8px 16px; font-weight: 600; }
+    button { cursor: pointer; font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px; border: none; transition: all 0.15s; font-weight: 600; }
+    .btn         { padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; }
     .btn-primary { background: var(--gold); color: #000; }
-    .btn-primary:hover    { background: #d4b030; }
-    .btn-primary:disabled { opacity: 0.5; cursor: default; }
-    .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover    { border-color: var(--text2); background: var(--bg3); }
+    .btn-primary:hover    { background: var(--gold-bright); transform: translateY(-1px); }
+    .btn-primary:active   { transform: translateY(0); }
+    .btn-primary:disabled { background: var(--gold-dim); color: #333; cursor: default; transform: none; }
+    .btn-secondary { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-secondary:hover    { border-color: var(--text2); background: var(--bg3); color: var(--text); }
     .btn-secondary:disabled { opacity: 0.4; cursor: default; }
 
     /* ── Login view ── */
@@ -66,18 +88,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: calc(100vh - 52px);
+      min-height: calc(100vh - 60px);
       padding: 40px 16px;
     }
     .login-card {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 4px;
       padding: 40px;
       max-width: 460px;
       width: 100%;
     }
-    .login-card h2 { font-size: 22px; color: var(--gold); margin-bottom: 10px; }
+    .login-card h2 { font-size: 22px; color: var(--gold-bright); font-family: var(--display); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
     .login-card > p { color: var(--text2); margin-bottom: 24px; line-height: 1.65; }
 #login-error { color: var(--red); font-size: 13px; margin-bottom: 12px; display: none; }
 
@@ -89,14 +111,14 @@
     .stat-card {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       padding: 14px 20px;
       flex: 1;
       min-width: 130px;
     }
     .stat-card.stat-wide { min-width: 200px; flex: 2; }
-    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin-bottom: 4px; }
-    .stat-value { font-size: 20px; font-weight: 700; }
+    .stat-label { font-size: 10px; font-family: var(--display); text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 4px; }
+    .stat-value { font-size: 20px; font-weight: 700; font-family: var(--mono); }
     .stat-sub   { font-size: 12px; color: var(--text2); margin-top: 2px; }
     .stat-value.gold   { color: var(--gold); }
     .stat-value.green  { color: var(--green); }
@@ -112,7 +134,7 @@
     .section {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       margin-bottom: 16px;
       overflow: hidden;
     }
@@ -126,19 +148,21 @@
       cursor: pointer;
       user-select: none;
     }
-    .section-header:hover { background: #1a1a30; }
-    .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); }
+    .section-header:hover { background: var(--bg-hover); }
+    .section-title { font-family: var(--display); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); display: block; flex-shrink: 0; }
     .section-toggle { font-size: 11px; color: var(--text2); }
 
     .station-table { width: 100%; border-collapse: collapse; }
     .station-table th {
       padding: 8px 14px;
       text-align: left;
-      font-size: 11px;
+      font-family: var(--display);
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text2);
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
       white-space: nowrap;
     }
     .station-table th.r { text-align: right; }
@@ -151,21 +175,21 @@
 
     /* ── Toolbar ── */
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-    .toolbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .toolbar-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); flex: 1; }
     .filter-group { display: flex; gap: 4px; align-items: center; }
     .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
 
     .filter-group select {
       background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-      border-radius: 4px; padding: 5px 8px; font-size: 12px; cursor: pointer;
-      font-family: inherit;
+      border-radius: 2px; padding: 5px 8px; font-size: 12px; cursor: pointer;
+      font-family: var(--body);
     }
     .filter-group select:hover { border-color: var(--text2); }
 
     .ticks-input {
-      background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-      border-radius: 4px; padding: 4px 6px; font-size: 12px; width: 52px;
-      text-align: center; font-family: inherit;
+      background: var(--bg2); border: 1px solid var(--border-bright); color: var(--text);
+      border-radius: 2px; padding: 4px 6px; font-size: 12px; width: 52px;
+      text-align: center; font-family: var(--mono);
     }
     .ticks-input:hover { border-color: var(--text2); }
 
@@ -174,13 +198,14 @@
     .filter-btn {
       padding: 5px 12px;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 2px;
       background: transparent;
       color: var(--text2);
-      font-size: 12px;
+      font-family: var(--display);
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
     .filter-btn:hover           { background: var(--bg3); color: var(--text); border-color: var(--text2); }
     .filter-btn.f-active        { background: var(--bg3); color: var(--text); border-color: var(--text2); }
@@ -194,38 +219,42 @@
     /* ── Button groups ── */
     .btn-group { display: flex; }
     .btn-group .filter-btn { border-radius: 0; border-right-width: 0; }
-    .btn-group .filter-btn:first-child { border-radius: 4px 0 0 4px; }
-    .btn-group .filter-btn:last-child  { border-radius: 0 4px 4px 0; border-right-width: 1px; }
+    .btn-group .filter-btn:first-child { border-radius: 2px 0 0 2px; }
+    .btn-group .filter-btn:last-child  { border-radius: 0 2px 2px 0; border-right-width: 1px; }
 
     /* ── Settings popover ── */
     .settings-btn-wrap { position: relative; }
     .settings-popover {
       position: absolute; top: calc(100% + 8px); right: 0;
       background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 10px 14px; min-width: 220px;
+      border-radius: 4px; padding: 10px 14px; min-width: 220px;
       z-index: 200; box-shadow: 0 6px 24px rgba(0,0,0,.6);
     }
     .settings-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
 
     /* ── Orders table ── */
-    .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; overflow: auto; }
+    .table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; overflow: auto; }
     table { width: 100%; border-collapse: collapse; }
     thead th {
-      padding: 10px 14px;
+      padding: 8px 14px;
       text-align: left;
-      font-size: 11px;
+      font-family: var(--display);
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text2);
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
       background: var(--bg3);
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
       cursor: pointer;
       user-select: none;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     thead th.r { text-align: right; }
-    thead th:hover { color: var(--text); }
+    thead th:hover { color: var(--text2); }
     thead th.th-sorted { color: var(--gold); }
     tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
     tbody tr:last-child { border-bottom: none; }
@@ -252,13 +281,13 @@
     .badge-corp     { background: rgba(155,111,212,.15); color: var(--purple); border: 1px solid rgba(155,111,212,.35); margin-left: 5px; font-size: 10px; }
     .badge-personal { background: rgba(198,162,39,.12); color: var(--gold);   border: 1px solid rgba(198,162,39,.3);  margin-left: 5px; font-size: 10px; }
 
-    .price { color: var(--gold); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .total { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .price { color: var(--gold-bright); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .total { color: var(--text); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
 
     .qty-cell  { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
     .vol-track { width: 48px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .vol-fill  { height: 100%; background: var(--blue); border-radius: 2px; }
-    .vol-text  { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
+    .vol-text  { font-family: var(--mono); font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
 
     .loc-cell { color: var(--text2); max-width: 200px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
     .loc-cell:hover { color: var(--blue); text-decoration: underline; }
@@ -284,11 +313,11 @@
       display: flex; align-items: center; gap: 6px;
       margin-bottom: 10px; flex-wrap: wrap;
       background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 6px 12px;
+      border-radius: 4px; padding: 6px 12px;
     }
     .settings-label {
-      color: var(--text2); font-size: 11px;
-      text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700;
+      font-family: var(--display); color: var(--text-dim); font-size: 9px;
+      text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;
       padding: 0 2px; white-space: nowrap;
     }
     /* ── Undercut status ── */
@@ -353,7 +382,7 @@
       right: 0;
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       min-width: 210px;
       z-index: 200;
       box-shadow: 0 6px 24px rgba(0,0,0,.6);
@@ -424,6 +453,7 @@
       white-space: nowrap;
     }
     .hw-val {
+      font-family: var(--mono);
       font-size: 15px;
       font-weight: 700;
       line-height: 1.2;
@@ -440,6 +470,7 @@
     }
     .hw-div-select:hover { color: var(--text); }
     .wallet-value {
+      font-family: var(--mono);
       font-size: 18px;
       font-weight: 700;
       white-space: nowrap;
@@ -478,7 +509,7 @@
     .help-modal {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 4px;
       width: 100%;
       max-width: 680px;
       max-height: 80vh;
@@ -495,9 +526,12 @@
       flex-shrink: 0;
     }
     .help-title {
-      font-size: 16px;
+      font-family: var(--display);
+      font-size: 13px;
       font-weight: 600;
-      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold-bright);
     }
     .help-body {
       padding: 18px 22px;
@@ -518,12 +552,24 @@
     .help-body ul { margin: 0 0 8px; padding-left: 20px; }
     .help-body li { margin-bottom: 4px; }
     .help-body strong { color: var(--text1); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><span class="eve">EVE</span>&nbsp;<span class="orders">Orders</span></div>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">EVE Orders</div>
+      <span class="logo-sub">Order Dashboard</span>
+    </div>
+  </div>
   <div id="header-wallets"></div>
   <div style="display:flex;align-items:center;gap:10px">
     <button class="btn btn-secondary help-btn" onclick="toggleHelp()" title="Open user guide">?</button>
