@@ -651,6 +651,9 @@
           <option value="undercut">Undercut</option>
           <option value="dupes">Dupes</option>
         </select>
+        <select id="owner-filter" onchange="setOwnerFilter(this.value)" title="Filter by order owner">
+          <option value="all">All Owners</option>
+        </select>
         <div id="loc-chip-wrap"></div>
         <button class="btn btn-secondary" onclick="resetFilters()" title="Clear all active filters">Reset</button>
       </div>
@@ -670,6 +673,11 @@
             <span class="settings-label" id="uc-timestamp">Market checked: —</span>
           </div>
           <div class="acct-divider" style="margin:6px 0"></div>
+          <div class="settings-row" style="display:block">
+            <span class="settings-label" style="display:block;margin-bottom:4px">Columns</span>
+            <div id="column-toggles" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px"></div>
+          </div>
+          <div class="acct-divider" style="margin:6px 0"></div>
           <div class="settings-row">
             <button class="btn btn-secondary" id="compact-btn" onclick="toggleCompact()" style="flex:1" title="Toggle compact view — hides item icons and reduces row height">Compact</button>
             <button class="btn btn-secondary" id="refresh-btn" onclick="loadOrders()"    style="flex:1" title="Reload all orders and re-check market prices">Refresh</button>
@@ -687,15 +695,16 @@
       <table id="orders-table" style="display:none">
         <thead>
           <tr>
-            <th class="copy-col" title="Copy suggested undercut price to clipboard and open in-game market window"></th>
-            <th onclick="sortBy('item')"     title="Click to sort by item name">         Item       <span id="si-item"></span></th>
-            <th onclick="sortBy('type')"     title="Click to sort by order type">        Type       <span id="si-type"></span></th>
-            <th onclick="sortBy('status')"   title="Click to sort by undercut status">   Status     <span id="si-status"></span></th>
-            <th onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
-            <th onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
-            <th onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
-            <th onclick="sortBy('location')" title="Click to sort by station name">      Location   <span id="si-location"></span></th>
-            <th onclick="sortBy('expiry')"   title="Click to sort by expiry date">       Expires     <span id="si-expiry"></span></th>
+            <th class="copy-col" data-col="copy" title="Copy suggested undercut price to clipboard and open in-game market window"></th>
+            <th data-col="item" onclick="sortBy('item')"     title="Click to sort by item name">         Item       <span id="si-item"></span></th>
+            <th data-col="type" onclick="sortBy('type')"     title="Click to sort by order type">        Type       <span id="si-type"></span></th>
+            <th data-col="status" onclick="sortBy('status')"   title="Click to sort by undercut status">   Status     <span id="si-status"></span></th>
+            <th data-col="price" onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
+            <th data-col="volume" onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
+            <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
+            <th data-col="location" onclick="sortBy('location')" title="Click to sort by station name">      Location   <span id="si-location"></span></th>
+            <th data-col="owner" onclick="sortBy('owner')" title="Click to sort by order owner">Owner <span id="si-owner"></span></th>
+            <th data-col="expiry" onclick="sortBy('expiry')"   title="Click to sort by expiry date">       Expires     <span id="si-expiry"></span></th>
           </tr>
         </thead>
         <tbody id="orders-body"></tbody>
@@ -724,7 +733,7 @@
         <li><strong>Wallet Bar</strong> — Your personal and corp ISK balances. Use the division selector on the corp wallet to pick which wallet to display.</li>
         <li><strong>Stats Bar</strong> — At-a-glance numbers: free order slots, undercut status (always visible), corp order counts (if you have the role), sell/buy values, and top items. Hover any card for a description.</li>
         <li><strong>Station Breakdown</strong> — Your orders grouped by station with sell/buy counts and undercut flags. Click the header to collapse.</li>
-        <li><strong>Market Orders Table</strong> — Every active order with full detail. Click any station row above to filter the table to that station.</li>
+        <li><strong>Market Orders Table</strong> — Every active order with full detail, including an Owner column (your name for personal orders, issuer for corp orders). Click any station row above to filter the table to that station.</li>
       </ul>
 
       <h3>Filters</h3>
@@ -732,6 +741,7 @@
         <li><strong>All Types / Sell / Buy</strong> — Show only sell orders, only buy orders, or both.</li>
         <li><strong>All Sources / Personal / Corp</strong> — Switch between your personal orders and corp orders. Corp requires the Accountant or Market Manager role in your corporation.</li>
         <li><strong>All Status / Best Price / Undercut / Dupes</strong> — Filter by undercut status. <em>Dupes</em> shows items where you have more than one order at the same station.</li>
+        <li><strong>All Owners</strong> — Filter by the character that owns the order. Useful for corp orders with multiple traders.</li>
         <li><strong>Location chip</strong> — Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the ✕ on the chip to clear.</li>
         <li><strong>Reset</strong> — Clears all active filters at once.</li>
       </ul>
@@ -805,6 +815,7 @@ const ACTIVE_KEY    = 'eve_active_char'; // charId of the currently active accou
 const CLIENT_ID_KEY = 'eve_client_id';
 const PKCE_V_KEY    = 'eve_pkce_v';
 const PKCE_S_KEY    = 'eve_pkce_s';
+const VISIBLE_COLS_KEY = 'eve_visible_columns';
 
 // =============================================================
 // App state
@@ -812,6 +823,7 @@ const PKCE_S_KEY    = 'eve_pkce_s';
 let allOrders      = [];
 let typeNames      = {};
 let locNames       = {};
+let ownerNames     = {};
 let activeTypeFilt = 'all';   // all | sell | buy
 let activeSrcFilt  = 'all';   // all | personal | corp
 let sortCol        = 'expiry';
@@ -821,6 +833,7 @@ let charSlotsUsed  = 0;        // orders placed by this character (personal + co
 let charSlotsMax   = 0;        // calculated from trade skills (0 = scope not granted)
 let activeLocFilt  = null;     // location_id (number) or null for all stations
 let activeUcFilt       = 'all';   // all | best | undercut
+let activeOwnerFilt    = 'all';
 let undercutStatus     = {};       // order_id → { status: 'loading'|'best'|'undercut'|'error', diff: 0, bestCompetitor: null }
 let marketCache        = {};       // 'regionId:typeId' → { ourOrders, market }
 let undercutLastFetched = null;    // Date of last completed undercut check
@@ -834,6 +847,19 @@ let walletPersonal     = null;   // personal ISK balance or null
 let walletCorp         = null;   // array of {division, balance} or null
 let walletCorpDivision = parseInt(localStorage.getItem('eve_corp_wallet_div') || '1');
 let walletCorpNames    = {};     // division number → label (fetched if possible)
+const columnDefs = [
+  { key: 'copy', label: 'Copy' },
+  { key: 'item', label: 'Item' },
+  { key: 'type', label: 'Type' },
+  { key: 'status', label: 'Status' },
+  { key: 'price', label: 'Unit Price' },
+  { key: 'volume', label: 'Qty' },
+  { key: 'total', label: 'Order Total' },
+  { key: 'location', label: 'Location' },
+  { key: 'owner', label: 'Owner' },
+  { key: 'expiry', label: 'Expires' },
+];
+let visibleCols = loadVisibleColumns();
 
 // =============================================================
 // Multi-account helpers
@@ -1107,6 +1133,74 @@ async function resolveNames(ids) {
   return out;
 }
 
+function getOrderOwnerId(order, fallbackCharId = getActiveCharId()) {
+  if (order._src === 'corp') return String(order.issued_by || fallbackCharId || '');
+  return String(order.issued_by || fallbackCharId || '');
+}
+
+function getOrderOwnerName(order, fallbackCharId = getActiveCharId()) {
+  const ownerId = getOrderOwnerId(order, fallbackCharId);
+  return ownerNames[ownerId] || `Character ${ownerId}`;
+}
+
+function updateOwnerFilterOptions(activeCharId = getActiveCharId()) {
+  const sel = document.getElementById('owner-filter');
+  if (!sel) return;
+  const ownerIds = [...new Set(allOrders.map(o => getOrderOwnerId(o, activeCharId)).filter(Boolean))];
+  const options = ownerIds
+    .map(id => ({ id, name: ownerNames[id] || `Character ${id}` }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  sel.innerHTML = '<option value="all">All Owners</option>' + options
+    .map(o => `<option value="${escHtml(o.id)}">${escHtml(o.name)}</option>`)
+    .join('');
+  if (!options.some(o => o.id === activeOwnerFilt)) activeOwnerFilt = 'all';
+  sel.value = activeOwnerFilt;
+}
+
+function loadVisibleColumns() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(VISIBLE_COLS_KEY) || 'null');
+    if (!saved || typeof saved !== 'object') throw new Error('none');
+    const out = {};
+    columnDefs.forEach(c => { out[c.key] = saved[c.key] !== false; });
+    return out;
+  } catch (_) {
+    return Object.fromEntries(columnDefs.map(c => [c.key, true]));
+  }
+}
+
+function saveVisibleColumns() {
+  localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(visibleCols));
+}
+
+function applyColumnVisibility() {
+  document.querySelectorAll('[data-col]').forEach(el => {
+    const key = el.dataset.col;
+    el.style.display = visibleCols[key] === false ? 'none' : '';
+  });
+}
+
+function renderColumnToggles() {
+  const wrap = document.getElementById('column-toggles');
+  if (!wrap) return;
+  wrap.innerHTML = columnDefs.map(c => {
+    const checked = visibleCols[c.key] !== false ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><input type="checkbox" ${checked} onchange="toggleColumn('${c.key}', this.checked)">${escHtml(c.label)}</label>`;
+  }).join('');
+}
+
+function toggleColumn(key, checked) {
+  const visibleCount = columnDefs.filter(c => visibleCols[c.key] !== false).length;
+  if (!checked && visibleCount <= 1) {
+    renderColumnToggles();
+    return;
+  }
+  visibleCols[key] = checked;
+  saveVisibleColumns();
+  renderColumnToggles();
+  applyColumnVisibility();
+}
+
 // =============================================================
 // Load orders — personal + corp
 // =============================================================
@@ -1219,6 +1313,12 @@ async function loadOrders() {
     )];
     locNames = await resolveNames(stationIds);
 
+    const ownerIds = [...new Set(allOrders.map(o => getOrderOwnerId(o, charId)).filter(Boolean))];
+    ownerNames = await resolveNames(ownerIds);
+    const activeName = getAccounts()[charId]?.cname || 'Me';
+    if (!ownerNames[charId]) ownerNames[charId] = activeName;
+
+    updateOwnerFilterOptions(charId);
     updateCorpVisibility();
     renderWalletBar();
     renderStats();
@@ -1503,6 +1603,9 @@ function renderOrders() {
   if (activeSrcFilt === 'personal') orders = orders.filter(o => o._src === 'personal');
   if (activeSrcFilt === 'corp')     orders = orders.filter(o => o._src === 'corp');
 
+  // Owner filter
+  if (activeOwnerFilt !== 'all') orders = orders.filter(o => getOrderOwnerId(o) === activeOwnerFilt);
+
   // Location filter
   if (activeLocFilt !== null) orders = orders.filter(o => o.location_id === activeLocFilt);
 
@@ -1530,6 +1633,7 @@ function renderOrders() {
                      : 'Player Structure';
     const isBuy  = o.is_buy_order;
     const orderTotal = o.price * o.volume_remain;
+    const ownerName  = getOrderOwnerName(o);
 
     const expiresMs   = new Date(o.issued).getTime() + o.duration * 86_400_000;
     const daysLeft    = Math.ceil((expiresMs - now) / 86_400_000);
@@ -1562,8 +1666,8 @@ function renderOrders() {
 
     return `
       <tr>
-        <td class="copy-col">${copyBtn}</td>
-        <td>
+        <td class="copy-col" data-col="copy">${copyBtn}</td>
+        <td data-col="item">
           <div class="item-cell">
             <img class="item-icon"
                  src="https://images.evetech.net/types/${o.type_id}/icon?size=32"
@@ -1571,15 +1675,16 @@ function renderOrders() {
             <a class="item-name" href="https://evetycoon.com/market/${o.type_id}" target="_blank" rel="noopener noreferrer">${escHtml(name)}</a>${srcBadge}
           </div>
         </td>
-        <td><span class="badge ${isBuy ? 'badge-buy' : 'badge-sell'}">${isBuy ? 'Buy' : 'Sell'}</span></td>
-        <td>${ucHtml}</td>
-        <td class="r price">${fmtISK(o.price)}</td>
-        <td class="r">
+        <td data-col="type"><span class="badge ${isBuy ? 'badge-buy' : 'badge-sell'}">${isBuy ? 'Buy' : 'Sell'}</span></td>
+        <td data-col="status">${ucHtml}</td>
+        <td class="r price" data-col="price">${fmtISK(o.price)}</td>
+        <td class="r" data-col="volume">
           <span class="vol-text">${fmtNum(o.volume_remain)}<span style="color:var(--text2)"> / </span>${fmtNum(o.volume_total)}</span>
         </td>
-        <td class="r total">${fmtISK(orderTotal)}</td>
-        <td class="loc-cell" title="Click to filter to this station" onclick="setLocFilter(${o.location_id})">${escHtml(loc)}</td>
-        <td class="${expiryClass}">${expiryText}</td>
+        <td class="r total" data-col="total">${fmtISK(orderTotal)}</td>
+        <td class="loc-cell" data-col="location" title="Click to filter to this station" onclick="setLocFilter(${o.location_id})">${escHtml(loc)}</td>
+        <td data-col="owner">${escHtml(ownerName)}</td>
+        <td class="${expiryClass}" data-col="expiry">${expiryText}</td>
       </tr>
     `;
   }).join('');
@@ -1587,6 +1692,7 @@ function renderOrders() {
   document.getElementById('orders-body').innerHTML = rows;
   document.getElementById('table-msg').style.display    = 'none';
   document.getElementById('orders-table').style.display = 'table';
+  applyColumnVisibility();
 }
 
 // =============================================================
@@ -1607,6 +1713,7 @@ function doSort(orders) {
       case 'volume':   av = a.volume_remain;            bv = b.volume_remain;            break;
       case 'total':    av = a.price * a.volume_remain;  bv = b.price * b.volume_remain;  break;
       case 'location': av = locNames[a.location_id] || ''; bv = locNames[b.location_id] || ''; break;
+      case 'owner':    av = getOrderOwnerName(a); bv = getOrderOwnerName(b); break;
       case 'expiry':
         av = new Date(a.issued).getTime() + a.duration * 86_400_000;
         bv = new Date(b.issued).getTime() + b.duration * 86_400_000;
@@ -1623,7 +1730,7 @@ function sortBy(col) {
   sortDir = sortCol === col ? -sortDir : 1;
   sortCol = col;
 
-  const cols = ['item','type','status','price','volume','total','location','expiry'];
+  const cols = ['item','type','status','price','volume','total','location','owner','expiry'];
   cols.forEach(c => {
     const ind = document.getElementById(`si-${c}`);
     const th  = ind?.parentElement;
@@ -1652,6 +1759,11 @@ function setUcFilter(filter) {
   renderOrders();
 }
 
+function setOwnerFilter(filter) {
+  activeOwnerFilt = filter;
+  renderOrders();
+}
+
 function toggleCompact() {
   compactMode = !compactMode;
   localStorage.setItem('eve_compact', compactMode ? '1' : '0');
@@ -1669,9 +1781,11 @@ function resetFilters() {
   activeTypeFilt = 'all';
   activeSrcFilt  = 'all';
   activeUcFilt   = 'all';
+  activeOwnerFilt = 'all';
   document.getElementById('type-filter').value = 'all';
   document.getElementById('src-filter').value  = 'all';
   document.getElementById('uc-filter').value   = 'all';
+  document.getElementById('owner-filter').value = 'all';
   renderOrders();
 }
 
@@ -2065,7 +2179,9 @@ async function init() {
     showView('dashboard');
     renderHeaderChar();
     initUcSettings();
+    renderColumnToggles();
     applyCompact();
+    applyColumnVisibility();
     loadOrders();
     // Close the account dropdown when clicking anywhere outside it
     document.addEventListener('click', () => {
