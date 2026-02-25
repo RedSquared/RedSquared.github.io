@@ -99,13 +99,13 @@ header {
   padding: 16px; display: flex; align-items: center; gap: 12px;
 }
 .tool-icon {
-  width: 36px; height: 36px; border: 1.5px solid var(--red-dim);
+  width: 36px; height: 36px; border: 1.5px solid var(--red);
   transform: rotate(45deg); display: flex; align-items: center;
   justify-content: center; flex-shrink: 0; transition: border-color 0.15s;
 }
 .tool-card:hover .tool-icon { border-color: var(--cyan); }
 .tool-icon::after {
-  content: ''; width: 10px; height: 10px; background: var(--red-dim);
+  content: ''; width: 10px; height: 10px; background: var(--red);
   display: block; transition: background 0.15s;
 }
 .tool-card:hover .tool-icon::after { background: var(--cyan); }

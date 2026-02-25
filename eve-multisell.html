@@ -285,7 +285,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   Four tuning knobs that affect how prices are calculated:
     - Undercut Ticks: how aggressively to undercut the lowest seller
     - Markup %: how much to add when falling back to Jita/Amarr
-    - Gap Threshold: when to warn about a suspicious price gap
+    - Gap Threshold %: when to warn about a suspicious price gap
     - Buy Floor Buffer: safety margin above the highest buy order
   You don't need to touch these — the defaults work well for most
   general trading. They're here for fine-tuning.
@@ -304,9 +304,9 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   </div>
   <div class="sep" style="height:28px;"></div>
   <div class="setting-item">
-    <span class="setting-label">Gap Threshold</span>
-    <input type="number" id="setting-threshold" value="10" min="1" max="100">
-    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this many ticks — but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
+    <span class="setting-label">Gap Threshold %</span>
+    <input type="number" id="setting-threshold" value="7.5" min="0.1" max="100" step="0.1">
+    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this percentage of the lowest sell price — but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
   </div>
   <div class="sep" style="height:28px;"></div>
   <div class="setting-item">
@@ -480,7 +480,7 @@ function getSettings() {
   return {
     undercutTicks: parseInt(document.getElementById('setting-undercut').value) || 2,
     markupPct:     (parseInt(document.getElementById('setting-markup').value) || 25) / 100,
-    gapThreshold:  parseInt(document.getElementById('setting-threshold').value) || 10,
+    gapThresholdPct: (parseFloat(document.getElementById('setting-threshold').value) || 7.5) / 100,
     buyBuffer:     (parseInt(document.getElementById('setting-buy-buffer').value) || 3) / 100,
   };
 }
@@ -708,8 +708,8 @@ async function fetchAllPrices() {
         const age2 = result.secondLowestAgeDays;
         const stale = age2 !== null && age2 > GAP_AGE_CUTOFF_DAYS;
         if (!stale) {
-          const gap = mkt.secondLowest - mkt.lowestSell;
-          if (gap > settings.gapThreshold * tick) {
+          const gapPct = (mkt.secondLowest - mkt.lowestSell) / mkt.lowestSell;
+          if (gapPct > settings.gapThresholdPct) {
             result.flags.push({ type: 'warn', text: 'Large Price Gap', tooltip: 'There is a large gap between the cheapest and 2nd cheapest seller. Consider buying out the low listing and relisting your item at a higher price closer to the 2nd lowest.' });
           }
         }
