@@ -1221,10 +1221,16 @@ async function loadOrders() {
   renderUcTimestamp();
   activeLocFilt  = null;
   activeUcFilt   = 'all';
+  const typeFilterEl = document.getElementById('type-filter');
+  const srcFilterEl = document.getElementById('src-filter');
+  const ucFilterEl = document.getElementById('uc-filter');
+  if (typeFilterEl) typeFilterEl.value = activeTypeFilt;
+  if (srcFilterEl) srcFilterEl.value = activeSrcFilt;
+  if (ucFilterEl) ucFilterEl.value = activeUcFilt;
   renderLocChip();
-  document.querySelectorAll('[data-tf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.tf === 'all') b.classList.add('f-active'); });
-  document.querySelectorAll('[data-sf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.sf === 'all') b.classList.add('f-active'); });
-  document.querySelectorAll('[data-uf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.uf === 'all') b.classList.add('f-active'); });
+  document.querySelectorAll('[data-tf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.tf === activeTypeFilt) b.classList.add('f-active'); });
+  document.querySelectorAll('[data-sf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.sf === activeSrcFilt) b.classList.add('f-active'); });
+  document.querySelectorAll('[data-uf]').forEach(b => { b.className = 'filter-btn'; if (b.dataset.uf === activeUcFilt) b.classList.add('f-active'); });
 
   try {
     const charId = getActiveCharId();
@@ -1400,6 +1406,30 @@ function setCorpWalletDiv(div) {
   renderWalletBar();
 }
 
+function getFilteredOrders({ includeLocation = true } = {}) {
+  let orders = allOrders;
+
+  if (activeTypeFilt === 'sell') orders = orders.filter(o => !o.is_buy_order);
+  if (activeTypeFilt === 'buy')  orders = orders.filter(o =>  o.is_buy_order);
+
+  if (activeSrcFilt === 'personal') orders = orders.filter(o => o._src === 'personal');
+  if (activeSrcFilt === 'corp')     orders = orders.filter(o => o._src === 'corp');
+
+  if (activeOwnerFilt !== 'all') orders = orders.filter(o => getOrderOwnerId(o) === activeOwnerFilt);
+
+  if (includeLocation && activeLocFilt !== null) orders = orders.filter(o => o.location_id === activeLocFilt);
+
+  if (activeUcFilt === 'best')     orders = orders.filter(o => undercutStatus[o.order_id]?.status === 'best');
+  if (activeUcFilt === 'undercut') orders = orders.filter(o => undercutStatus[o.order_id]?.status === 'undercut');
+  if (activeUcFilt === 'dupes') {
+    const count = {};
+    orders.forEach(o => { const k = `${o.type_id}:${o.location_id}`; count[k] = (count[k] || 0) + 1; });
+    orders = orders.filter(o => count[`${o.type_id}:${o.location_id}`] > 1);
+  }
+
+  return orders;
+}
+
 // =============================================================
 // Render: stats bar
 // =============================================================
@@ -1411,13 +1441,12 @@ function renderStats() {
   const shortLoc = fullLoc ? fullLoc.split(' - ')[0] : null;
   const l        = shortLoc ? ` — ${shortLoc}` : '';
 
+  const scopeAll = getFilteredOrders();
+
   // Corp orders in scope
-  const corpOrds = allOrders.filter(o => o._src === 'corp' && (!isLoc || o.location_id === activeLocFilt));
+  const corpOrds = scopeAll.filter(o => o._src === 'corp');
   const corpSell = corpOrds.filter(o => !o.is_buy_order);
   const corpBuy  = corpOrds.filter(o =>  o.is_buy_order);
-
-  // All orders in scope (for sell/buy totals)
-  const scopeAll = isLoc ? allOrders.filter(o => o.location_id === activeLocFilt) : allOrders;
   const sellVal  = scopeAll.filter(o => !o.is_buy_order).reduce((s, o) => s + o.price * o.volume_remain, 0);
   const buyVal   = scopeAll.filter(o =>  o.is_buy_order).reduce((s, o) => s + o.price * o.volume_remain, 0);
 
@@ -1511,12 +1540,15 @@ function renderStats() {
 // Render: station breakdown
 // =============================================================
 function renderStationBreakdown() {
+  // Respect active filters except location so this view can still be used to drill into a station
+  const scopedOrders = getFilteredOrders({ includeLocation: false });
+
   // Group by location_id
-  const ucDataReady = allOrders.length > 0 &&
-    allOrders.every(o => undercutStatus[o.order_id] && undercutStatus[o.order_id].status !== 'loading');
+  const ucDataReady = scopedOrders.length > 0 &&
+    scopedOrders.every(o => undercutStatus[o.order_id] && undercutStatus[o.order_id].status !== 'loading');
 
   const stations = {};
-  allOrders.forEach(o => {
+  scopedOrders.forEach(o => {
     const loc = o.location_id;
     if (!stations[loc]) stations[loc] = { sell: 0, buy: 0, sellVal: 0, buyVal: 0, undercut: 0 };
     if (o.is_buy_order) {
@@ -1593,30 +1625,7 @@ function toggleSection() {
 // Render: orders table
 // =============================================================
 function renderOrders() {
-  let orders = allOrders;
-
-  // Type filter
-  if (activeTypeFilt === 'sell') orders = orders.filter(o => !o.is_buy_order);
-  if (activeTypeFilt === 'buy')  orders = orders.filter(o =>  o.is_buy_order);
-
-  // Source filter
-  if (activeSrcFilt === 'personal') orders = orders.filter(o => o._src === 'personal');
-  if (activeSrcFilt === 'corp')     orders = orders.filter(o => o._src === 'corp');
-
-  // Owner filter
-  if (activeOwnerFilt !== 'all') orders = orders.filter(o => getOrderOwnerId(o) === activeOwnerFilt);
-
-  // Location filter
-  if (activeLocFilt !== null) orders = orders.filter(o => o.location_id === activeLocFilt);
-
-  // Undercut filter (only applies once status is loaded)
-  if (activeUcFilt === 'best')     orders = orders.filter(o => undercutStatus[o.order_id]?.status === 'best');
-  if (activeUcFilt === 'undercut') orders = orders.filter(o => undercutStatus[o.order_id]?.status === 'undercut');
-  if (activeUcFilt === 'dupes') {
-    const count = {};
-    orders.forEach(o => { const k = `${o.type_id}:${o.location_id}`; count[k] = (count[k] || 0) + 1; });
-    orders = orders.filter(o => count[`${o.type_id}:${o.location_id}`] > 1);
-  }
+  let orders = getFilteredOrders();
 
   orders = doSort(orders);
 
@@ -1746,21 +1755,29 @@ function sortBy(col) {
 // =============================================================
 function setTypeFilter(filter) {
   activeTypeFilt = filter;
+  renderStats();
+  renderStationBreakdown();
   renderOrders();
 }
 
 function setSrcFilter(filter) {
   activeSrcFilt = filter;
+  renderStats();
+  renderStationBreakdown();
   renderOrders();
 }
 
 function setUcFilter(filter) {
   activeUcFilt = filter;
+  renderStats();
+  renderStationBreakdown();
   renderOrders();
 }
 
 function setOwnerFilter(filter) {
   activeOwnerFilt = filter;
+  renderStats();
+  renderStationBreakdown();
   renderOrders();
 }
 
@@ -1786,6 +1803,8 @@ function resetFilters() {
   document.getElementById('src-filter').value  = 'all';
   document.getElementById('uc-filter').value   = 'all';
   document.getElementById('owner-filter').value = 'all';
+  renderStats();
+  renderStationBreakdown();
   renderOrders();
 }
 
