@@ -331,7 +331,6 @@
     .turn-good  { color: var(--green); font-weight: 700; font-size: 12px; white-space: nowrap; }
     .turn-bad   { color: var(--red); font-weight: 700; font-size: 12px; white-space: nowrap; }
     .turn-mid   { color: var(--orange); font-weight: 700; font-size: 12px; white-space: nowrap; }
-    .turn-sub   { color: var(--text2); font-size: 11px; font-weight: 500; margin-left: 6px; }
     .mini-spin  {
       display: inline-block; width: 10px; height: 10px;
       border: 2px solid var(--border); border-top-color: var(--text2);
@@ -707,7 +706,7 @@
             <th data-col="item" onclick="sortBy('item')"     title="Click to sort by item name">         Item       <span id="si-item"></span></th>
             <th data-col="type" onclick="sortBy('type')"     title="Click to sort by order type">        Type       <span id="si-type"></span></th>
             <th data-col="status" onclick="sortBy('status')"   title="Click to sort by undercut status">   Status     <span id="si-status"></span></th>
-            <th data-col="turnover" onclick="sortBy('turnover')" title="HOLD = units ahead is below avg/day, UPDATE = units ahead is above avg/day, BORDERLINE = roughly equal."><span id="turnover-col-label">Sell Pace</span> <span id="si-turnover"></span></th>
+            <th data-col="turnover" onclick="sortBy('turnover')" title="Average units sold per day over configured Pace Days vs units currently ahead of your order"><span id="turnover-col-label">Sell Pace</span> <span id="si-turnover"></span></th>
             <th data-col="price" onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
             <th data-col="volume" onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
             <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
@@ -1686,11 +1685,11 @@ function renderOrders() {
       if (!turn || turn.status === 'loading') {
         turnHtml = `<span class="uc-loading"><span class="mini-spin"></span></span>`;
       } else if (turn.status === 'ok') {
-        turnHtml = `<span class="turn-good" title="Units ahead is below your configured avg units/day sell pace.">HOLD</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+        turnHtml = `<span class="turn-good">FREE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
       } else if (turn.status === 'bad') {
-        turnHtml = `<span class="turn-bad" title="Units ahead exceeds your configured avg units/day sell pace.">UPDATE</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+        turnHtml = `<span class="turn-bad">RED (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
       } else if (turn.status === 'mid') {
-        turnHtml = `<span class="turn-mid" title="Units ahead is right at your configured avg units/day sell pace.">BORDERLINE</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+        turnHtml = `<span class="turn-mid">EDGE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
       } else {
         turnHtml = '<span class="uc-loading">—</span>';
       }
