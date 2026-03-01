@@ -328,6 +328,10 @@
     .uc-cut     { color: var(--red);    font-size: 12px; font-weight: 700; white-space: nowrap; }
     .uc-loading { color: var(--text2);  font-size: 12px; }
     .uc-diff    { font-weight: 400; color: var(--red); font-size: 11px; display: block; }
+    .turn-good  { color: var(--green); font-weight: 700; font-size: 12px; white-space: nowrap; }
+    .turn-bad   { color: var(--red); font-weight: 700; font-size: 12px; white-space: nowrap; }
+    .turn-mid   { color: var(--orange); font-weight: 700; font-size: 12px; white-space: nowrap; }
+    .turn-sub   { color: var(--text2); font-size: 11px; font-weight: 500; margin-left: 6px; }
     .mini-spin  {
       display: inline-block; width: 10px; height: 10px;
       border: 2px solid var(--border); border-top-color: var(--text2);
@@ -669,6 +673,10 @@
             <span class="settings-label" title="Number of 0.01 ISK ticks to move below the current best price when suggesting an undercut price.">Ticks</span>
             <input type="number" id="uc-ticks-input" class="ticks-input" min="1" step="1" value="1" onchange="setUcTicks(+this.value)" title="How many price ticks (0.01 ISK each) to undercut by">
           </div>
+          <div class="settings-row">
+            <span class="settings-label" title="How many recent days to use when calculating average units sold per day for Sell Pace status.">Pace Days</span>
+            <input type="number" id="turnover-days-input" class="ticks-input" min="1" max="90" step="1" value="7" onchange="setTurnoverDays(+this.value)" title="Days used for sell pace average (default 7)">
+          </div>
           <div class="settings-row" style="margin-top:4px">
             <span class="settings-label" id="uc-timestamp">Market checked: —</span>
           </div>
@@ -699,6 +707,7 @@
             <th data-col="item" onclick="sortBy('item')"     title="Click to sort by item name">         Item       <span id="si-item"></span></th>
             <th data-col="type" onclick="sortBy('type')"     title="Click to sort by order type">        Type       <span id="si-type"></span></th>
             <th data-col="status" onclick="sortBy('status')"   title="Click to sort by undercut status">   Status     <span id="si-status"></span></th>
+            <th data-col="turnover" onclick="sortBy('turnover')" title="HOLD = units ahead is below avg/day, UPDATE = units ahead is above avg/day, BORDERLINE = roughly equal."><span id="turnover-col-label">Sell Pace</span> <span id="si-turnover"></span></th>
             <th data-col="price" onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
             <th data-col="volume" onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
             <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
@@ -744,6 +753,7 @@
         <li><strong>All Owners</strong> — Filter by the character that owns the order. Useful for corp orders with multiple traders.</li>
         <li><strong>Location chip</strong> — Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the ✕ on the chip to clear.</li>
         <li><strong>Reset</strong> — Clears all active filters at once.</li>
+        <li><strong>Missing Sell Pace?</strong> — Open ⚙ Settings and check the <em>Sell Pace</em> box under Columns.</li>
       </ul>
 
       <h3>Undercut Detection</h3>
@@ -816,6 +826,7 @@ const CLIENT_ID_KEY = 'eve_client_id';
 const PKCE_V_KEY    = 'eve_pkce_v';
 const PKCE_S_KEY    = 'eve_pkce_s';
 const VISIBLE_COLS_KEY = 'eve_visible_columns';
+const TURNOVER_VISIBLE_MIGRATION_KEY = 'eve_turnover_visible_migrated_v1';
 
 // =============================================================
 // App state
@@ -835,11 +846,13 @@ let activeLocFilt  = null;     // location_id (number) or null for all stations
 let activeUcFilt       = 'all';   // all | best | undercut
 let activeOwnerFilt    = 'all';
 let undercutStatus     = {};       // order_id → { status: 'loading'|'best'|'undercut'|'error', diff: 0, bestCompetitor: null }
+let turnoverStatus     = {};       // order_id → { status: 'loading'|'ok'|'bad'|'mid'|'na'|'error', avgDaily, unitsAhead }
 let marketCache        = {};       // 'regionId:typeId' → { ourOrders, market }
 let undercutLastFetched = null;    // Date of last completed undercut check
 
 let undercutTicks = parseInt(localStorage.getItem('eve_uc_ticks') || '1');  // ticks to move when undercutting
 let undercutScope = localStorage.getItem('eve_uc_scope') || 'station';       // 'station' | 'region'
+let turnoverDays = Math.min(90, Math.max(1, parseInt(localStorage.getItem('eve_turnover_days') || '7') || 7));
 let compactMode   = localStorage.getItem('eve_compact') === '1';
 
 let hasCorpRoles       = null;   // null=unknown, true=has roles, false=lacks Accountant/Market Manager
@@ -852,6 +865,7 @@ const columnDefs = [
   { key: 'item', label: 'Item' },
   { key: 'type', label: 'Type' },
   { key: 'status', label: 'Status' },
+  { key: 'turnover', label: '7D Sell Pace' },
   { key: 'price', label: 'Unit Price' },
   { key: 'volume', label: 'Qty' },
   { key: 'total', label: 'Order Total' },
@@ -1173,6 +1187,14 @@ function saveVisibleColumns() {
   localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(visibleCols));
 }
 
+function ensureTurnoverColumnVisible() {
+  if (localStorage.getItem(TURNOVER_VISIBLE_MIGRATION_KEY) === '1') return;
+  // one-time migration so existing users actually see the new column after deploy
+  visibleCols.turnover = true;
+  saveVisibleColumns();
+  localStorage.setItem(TURNOVER_VISIBLE_MIGRATION_KEY, '1');
+}
+
 function applyColumnVisibility() {
   document.querySelectorAll('[data-col]').forEach(el => {
     const key = el.dataset.col;
@@ -1216,6 +1238,7 @@ async function loadOrders() {
   walletPersonal      = null;
   walletCorp          = null;
   undercutStatus      = {};
+  turnoverStatus      = {};
   marketCache         = {};
   undercutLastFetched = null;
   renderUcTimestamp();
@@ -1667,6 +1690,22 @@ function renderOrders() {
       ucHtml = `<span class="uc-loading">—</span>`;
     }
 
+    const turn = turnoverStatus[o.order_id];
+    let turnHtml = '<span class="uc-loading">—</span>';
+    if (!isBuy) {
+      if (!turn || turn.status === 'loading') {
+        turnHtml = `<span class="uc-loading"><span class="mini-spin"></span></span>`;
+      } else if (turn.status === 'ok') {
+        turnHtml = `<span class="turn-good" title="Units ahead is below your configured avg units/day sell pace.">HOLD</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+      } else if (turn.status === 'bad') {
+        turnHtml = `<span class="turn-bad" title="Units ahead exceeds your configured avg units/day sell pace.">UPDATE</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+      } else if (turn.status === 'mid') {
+        turnHtml = `<span class="turn-mid" title="Units ahead is right at your configured avg units/day sell pace.">BORDERLINE</span><span class="turn-sub">ahead ${fmtNum(Math.round(turn.unitsAhead))} · avg/day ${fmtNum(Math.round(turn.avgDaily))}</span>`;
+      } else {
+        turnHtml = '<span class="uc-loading">—</span>';
+      }
+    }
+
     const copyBtn = (uc && (uc.status === 'undercut' || uc.status === 'best'))
       ? `<button id="copy-btn-${o.order_id}" class="copy-btn"
              title="Copy suggested price &amp; open in-game market window"
@@ -1686,6 +1725,7 @@ function renderOrders() {
         </td>
         <td data-col="type"><span class="badge ${isBuy ? 'badge-buy' : 'badge-sell'}">${isBuy ? 'Buy' : 'Sell'}</span></td>
         <td data-col="status">${ucHtml}</td>
+        <td data-col="turnover">${turnHtml}</td>
         <td class="r price" data-col="price">${fmtISK(o.price)}</td>
         <td class="r" data-col="volume">
           <span class="vol-text">${fmtNum(o.volume_remain)}<span style="color:var(--text2)"> / </span>${fmtNum(o.volume_total)}</span>
@@ -1718,6 +1758,15 @@ function doSort(orders) {
                        : s.status === 'best' ? 0 : s.diff;
         av = val(undercutStatus[a.order_id]); bv = val(undercutStatus[b.order_id]); break;
       }
+      case 'turnover': {
+        const val = t => {
+          if (!t || t.status === 'loading' || t.status === 'error' || t.status === 'na') return Infinity;
+          return t.unitsAhead - t.avgDaily;
+        };
+        av = val(turnoverStatus[a.order_id]);
+        bv = val(turnoverStatus[b.order_id]);
+        break;
+      }
       case 'price':    av = a.price;                   bv = b.price;                   break;
       case 'volume':   av = a.volume_remain;            bv = b.volume_remain;            break;
       case 'total':    av = a.price * a.volume_remain;  bv = b.price * b.volume_remain;  break;
@@ -1739,7 +1788,7 @@ function sortBy(col) {
   sortDir = sortCol === col ? -sortDir : 1;
   sortCol = col;
 
-  const cols = ['item','type','status','price','volume','total','location','owner','expiry'];
+  const cols = ['item','type','status','turnover','price','volume','total','location','owner','expiry'];
   cols.forEach(c => {
     const ind = document.getElementById(`si-${c}`);
     const th  = ind?.parentElement;
@@ -1863,9 +1912,51 @@ async function fetchAllMarketOrders(regionId, typeId) {
   return [first, ...rest].flat();
 }
 
+async function fetchMarketHistory(regionId, typeId) {
+  const resp = await fetch(`${ESI_BASE}/markets/${regionId}/history/?type_id=${typeId}`);
+  if (!resp.ok) throw new Error(`History ${regionId}:${typeId} → ${resp.status}`);
+  return resp.json();
+}
+
+function calcAvgDaily(history, days = turnoverDays) {
+  if (!Array.isArray(history) || !history.length) return 0;
+  const windowDays = Math.min(history.length, Math.max(1, days || turnoverDays));
+  const recent = history.slice(-windowDays);
+  const total = recent.reduce((sum, d) => sum + (d.volume || 0), 0);
+  return total / recent.length;
+}
+
+function applyTurnoverForKey(key, ourIds) {
+  const cached = marketCache[key];
+  if (!cached) return;
+  const { ourOrders, market, history } = cached;
+  const avgDaily = calcAvgDaily(history, turnoverDays);
+
+  ourOrders.forEach(o => {
+    if (o.is_buy_order) {
+      turnoverStatus[o.order_id] = { status: 'na', avgDaily: 0, unitsAhead: 0 };
+      return;
+    }
+
+    const unitsAhead = market
+      .filter(mo => !mo.is_buy_order && mo.location_id === o.location_id && !ourIds.has(mo.order_id) && mo.price < o.price)
+      .reduce((sum, mo) => sum + (mo.volume_remain || 0), 0);
+
+    let status = 'mid';
+    if (avgDaily <= 0) status = 'error';
+    else if (unitsAhead < avgDaily) status = 'ok';
+    else if (unitsAhead > avgDaily) status = 'bad';
+
+    turnoverStatus[o.order_id] = { status, avgDaily, unitsAhead };
+  });
+}
+
 async function loadUndercutStatus(orders) {
   // Initialise all as loading
-  orders.forEach(o => { undercutStatus[o.order_id] = { status: 'loading', diff: 0 }; });
+  orders.forEach(o => {
+    undercutStatus[o.order_id] = { status: 'loading', diff: 0 };
+    turnoverStatus[o.order_id] = { status: 'loading', avgDaily: 0, unitsAhead: 0 };
+  });
   renderOrders();
 
   // Group by (region_id, type_id) so we fetch each market once
@@ -1881,12 +1972,19 @@ async function loadUndercutStatus(orders) {
   await Promise.all([...pairs.entries()].map(async ([key, ourOrders]) => {
     const [regionId, typeId] = key.split(':');
     try {
-      const market = await fetchAllMarketOrders(regionId, typeId);
-      marketCache[key] = { ourOrders, market };
+      const [market, history] = await Promise.all([
+        fetchAllMarketOrders(regionId, typeId),
+        fetchMarketHistory(regionId, typeId),
+      ]);
+      marketCache[key] = { ourOrders, market, history };
       applyUndercutForKey(key, ourIds);
+      applyTurnoverForKey(key, ourIds);
     } catch (e) {
-      console.warn(`Undercut fetch failed for ${key}:`, e.message);
-      ourOrders.forEach(o => { undercutStatus[o.order_id] = { status: 'error', diff: 0 }; });
+      console.warn(`Market fetch failed for ${key}:`, e.message);
+      ourOrders.forEach(o => {
+        undercutStatus[o.order_id] = { status: 'error', diff: 0 };
+        turnoverStatus[o.order_id] = { status: 'error', avgDaily: 0, unitsAhead: 0 };
+      });
     }
   }));
 
@@ -1979,6 +2077,20 @@ function setUcTicks(ticks) {
   localStorage.setItem('eve_uc_ticks', undercutTicks);
 }
 
+function setTurnoverDays(days) {
+  turnoverDays = Math.min(90, Math.max(1, days || 1));
+  localStorage.setItem('eve_turnover_days', turnoverDays);
+
+  const label = document.getElementById('turnover-col-label');
+  if (label) label.textContent = `${turnoverDays}D Sell Pace`;
+
+  if (Object.keys(marketCache).length > 0) {
+    const ourIds = new Set(allOrders.map(o => o.order_id));
+    Object.keys(marketCache).forEach(key => applyTurnoverForKey(key, ourIds));
+    renderOrders();
+  }
+}
+
 function initUcSettings() {
   document.querySelectorAll('[data-us]').forEach(b => {
     b.className = 'filter-btn';
@@ -1986,6 +2098,10 @@ function initUcSettings() {
   });
   const ti = document.getElementById('uc-ticks-input');
   if (ti) ti.value = undercutTicks;
+  const tdi = document.getElementById('turnover-days-input');
+  if (tdi) tdi.value = turnoverDays;
+  const label = document.getElementById('turnover-col-label');
+  if (label) label.textContent = `${turnoverDays}D Sell Pace`;
 }
 
 // =============================================================
@@ -2198,6 +2314,7 @@ async function init() {
     showView('dashboard');
     renderHeaderChar();
     initUcSettings();
+    ensureTurnoverColumnVisible();
     renderColumnToggles();
     applyCompact();
     applyColumnVisibility();
