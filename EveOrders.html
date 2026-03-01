@@ -752,6 +752,7 @@
         <li><strong>All Owners</strong> — Filter by the character that owns the order. Useful for corp orders with multiple traders.</li>
         <li><strong>Location chip</strong> — Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the ✕ on the chip to clear.</li>
         <li><strong>Reset</strong> — Clears all active filters at once.</li>
+        <li><strong>Missing Sell Pace?</strong> — Open ⚙ Settings and check the <em>Sell Pace</em> box under Columns.</li>
       </ul>
 
       <h3>Undercut Detection</h3>
@@ -824,6 +825,7 @@ const CLIENT_ID_KEY = 'eve_client_id';
 const PKCE_V_KEY    = 'eve_pkce_v';
 const PKCE_S_KEY    = 'eve_pkce_s';
 const VISIBLE_COLS_KEY = 'eve_visible_columns';
+const TURNOVER_VISIBLE_MIGRATION_KEY = 'eve_turnover_visible_migrated_v1';
 
 // =============================================================
 // App state
@@ -1182,6 +1184,14 @@ function loadVisibleColumns() {
 
 function saveVisibleColumns() {
   localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(visibleCols));
+}
+
+function ensureTurnoverColumnVisible() {
+  if (localStorage.getItem(TURNOVER_VISIBLE_MIGRATION_KEY) === '1') return;
+  // one-time migration so existing users actually see the new column after deploy
+  visibleCols.turnover = true;
+  saveVisibleColumns();
+  localStorage.setItem(TURNOVER_VISIBLE_MIGRATION_KEY, '1');
 }
 
 function applyColumnVisibility() {
@@ -2303,6 +2313,7 @@ async function init() {
     showView('dashboard');
     renderHeaderChar();
     initUcSettings();
+    ensureTurnoverColumnVisible();
     renderColumnToggles();
     applyCompact();
     applyColumnVisibility();
