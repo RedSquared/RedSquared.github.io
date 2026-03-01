@@ -1695,11 +1695,11 @@ function renderOrders() {
       if (!turn || turn.status === 'loading') {
         turnHtml = `<span class="uc-loading"><span class="mini-spin"></span></span>`;
       } else if (turn.status === 'ok') {
-        turnHtml = `<span class="turn-good">FREE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-good" title="Demand is moving faster than inventory ahead of you.">HOLD (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else if (turn.status === 'bad') {
-        turnHtml = `<span class="turn-bad">RED (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-bad" title="Inventory ahead exceeds expected daily sales; consider repricing.">UPDATE (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else if (turn.status === 'mid') {
-        turnHtml = `<span class="turn-mid">EDGE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-mid" title="Inventory ahead is about equal to expected daily sales.">BORDERLINE (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else {
         turnHtml = '<span class="uc-loading">—</span>';
       }
