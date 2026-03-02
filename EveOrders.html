@@ -845,7 +845,7 @@ let activeLocFilt  = null;     // location_id (number) or null for all stations
 let activeUcFilt       = 'all';   // all | best | undercut
 let activeOwnerFilt    = 'all';
 let undercutStatus     = {};       // order_id → { status: 'loading'|'best'|'undercut'|'error', diff: 0, bestCompetitor: null }
-let turnoverStatus     = {};       // order_id → { status: 'loading'|'ok'|'bad'|'mid'|'na'|'error', avgDaily, unitsAhead }
+let turnoverStatus     = {};       // order_id → { status: 'loading'|'ok'|'bad'|'mid'|'na'|'error', avgDaily, unitsAhead, unitsToClear }
 let marketCache        = {};       // 'regionId:typeId' → { ourOrders, market }
 let undercutLastFetched = null;    // Date of last completed undercut check
 
@@ -1695,11 +1695,11 @@ function renderOrders() {
       if (!turn || turn.status === 'loading') {
         turnHtml = `<span class="uc-loading"><span class="mini-spin"></span></span>`;
       } else if (turn.status === 'ok') {
-        turnHtml = `<span class="turn-good">FREE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-good" title="Ahead + 1 unit is below expected daily sales.">HOLD (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else if (turn.status === 'bad') {
-        turnHtml = `<span class="turn-bad">RED (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-bad" title="Ahead + 1 unit exceeds expected daily sales; consider repricing.">UPDATE (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else if (turn.status === 'mid') {
-        turnHtml = `<span class="turn-mid">EDGE (${fmtNum(Math.round(turn.unitsAhead))}/${fmtNum(Math.round(turn.avgDaily))})</span>`;
+        turnHtml = `<span class="turn-mid" title="Ahead + 1 unit is about equal to expected daily sales.">BORDERLINE (${fmtNum(Math.round(turn.unitsAhead))} Ahead, ~${fmtNum(Math.round(turn.avgDaily))} Sold/Day)</span>`;
       } else {
         turnHtml = '<span class="uc-loading">—</span>';
       }
@@ -1760,7 +1760,7 @@ function doSort(orders) {
       case 'turnover': {
         const val = t => {
           if (!t || t.status === 'loading' || t.status === 'error' || t.status === 'na') return Infinity;
-          return t.unitsAhead - t.avgDaily;
+          return t.unitsToClear - t.avgDaily;
         };
         av = val(turnoverStatus[a.order_id]);
         bv = val(turnoverStatus[b.order_id]);
@@ -1933,7 +1933,7 @@ function applyTurnoverForKey(key, ourIds) {
 
   ourOrders.forEach(o => {
     if (o.is_buy_order) {
-      turnoverStatus[o.order_id] = { status: 'na', avgDaily: 0, unitsAhead: 0 };
+      turnoverStatus[o.order_id] = { status: 'na', avgDaily: 0, unitsAhead: 0, unitsToClear: 0 };
       return;
     }
 
@@ -1941,12 +1941,16 @@ function applyTurnoverForKey(key, ourIds) {
       .filter(mo => !mo.is_buy_order && mo.location_id === o.location_id && !ourIds.has(mo.order_id) && mo.price < o.price)
       .reduce((sum, mo) => sum + (mo.volume_remain || 0), 0);
 
-    let status = 'mid';
-    if (avgDaily <= 0) status = 'error';
-    else if (unitsAhead < avgDaily) status = 'ok';
-    else if (unitsAhead > avgDaily) status = 'bad';
+    const unitsToClear = unitsAhead + 1;
+    const roundedUnitsToClear = Math.round(unitsToClear);
+    const roundedAvgDaily = Math.round(avgDaily);
 
-    turnoverStatus[o.order_id] = { status, avgDaily, unitsAhead };
+    let status = 'mid';
+    if (roundedAvgDaily <= 0) status = 'error';
+    else if (roundedUnitsToClear < roundedAvgDaily) status = 'ok';
+    else if (roundedUnitsToClear > roundedAvgDaily) status = 'bad';
+
+    turnoverStatus[o.order_id] = { status, avgDaily, unitsAhead, unitsToClear };
   });
 }
 
@@ -1954,7 +1958,7 @@ async function loadUndercutStatus(orders) {
   // Initialise all as loading
   orders.forEach(o => {
     undercutStatus[o.order_id] = { status: 'loading', diff: 0 };
-    turnoverStatus[o.order_id] = { status: 'loading', avgDaily: 0, unitsAhead: 0 };
+    turnoverStatus[o.order_id] = { status: 'loading', avgDaily: 0, unitsAhead: 0, unitsToClear: 0 };
   });
   renderOrders();
 
@@ -1982,7 +1986,7 @@ async function loadUndercutStatus(orders) {
       console.warn(`Market fetch failed for ${key}:`, e.message);
       ourOrders.forEach(o => {
         undercutStatus[o.order_id] = { status: 'error', diff: 0 };
-        turnoverStatus[o.order_id] = { status: 'error', avgDaily: 0, unitsAhead: 0 };
+        turnoverStatus[o.order_id] = { status: 'error', avgDaily: 0, unitsAhead: 0, unitsToClear: 0 };
       });
     }
   }));
