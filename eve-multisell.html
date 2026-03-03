@@ -74,7 +74,7 @@ select {
 }
 select:focus { outline: none; border-color: var(--cyan); }
 select:hover { border-color: var(--cyan-dim); }
-.header-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+.header-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .btn {
   font-family: var(--display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
   border: none; cursor: pointer; padding: 8px 16px; border-radius: 2px;
@@ -91,7 +91,7 @@ select:hover { border-color: var(--cyan-dim); }
 
 .settings-bar {
   background: var(--bg-deep); border-bottom: 1px solid var(--border);
-  padding: 0 24px; display: none; gap: 32px; align-items: center; height: 52px;
+  padding: 10px 24px; display: none; gap: 20px; align-items: center; flex-wrap: wrap;
 }
 .settings-bar.open { display: flex; }
 .setting-item { display: flex; align-items: center; gap: 10px; }
@@ -122,11 +122,11 @@ footer a:hover { color: var(--text-secondary); }
 .section-header { background: var(--bg-deep); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
 .section-title { font-family: var(--display); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 8px; }
 .section-title::before { content: ''; width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); display: block; flex-shrink: 0; }
-.paste-area { display: flex; }
+.paste-area { display: flex; align-items: stretch; }
 textarea {
   flex: 1; background: transparent; border: none; color: var(--text-primary);
   font-family: var(--mono); font-size: 12px; padding: 16px; resize: none;
-  height: 180px; line-height: 1.6; outline: none;
+  min-height: 180px; line-height: 1.6; outline: none; align-self: stretch;
 }
 textarea::placeholder { color: var(--text-dim); }
 textarea:focus { background: rgba(0,180,204,0.02); }
@@ -217,6 +217,42 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
 .shimmer { background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (max-width: 1300px) {
+  header {
+    height: auto;
+    min-height: 60px;
+    padding: 12px 24px;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .station-wrap,
+  .buyfrom-wrap {
+    max-width: none;
+    margin-left: 0;
+    flex: 1 1 340px;
+  }
+  .header-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  header .sep { display: none; }
+  .main { padding: 16px; }
+  .paste-area { flex-direction: column; }
+  .paste-hint {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+  .settings-bar {
+    padding: 10px 16px;
+    gap: 12px;
+  }
+  .settings-bar .sep { display: none; }
+}
 </style>
 </head>
 <body>
@@ -270,10 +306,6 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </select>
   </div>
   <div class="header-actions">
-    <a href="EveOrders.html" class="btn btn-ghost" style="text-decoration:none" title="Go to EVE Orders Dashboard">Orders</a>
-    <span class="sep"></span>
-    <a href="EveOrders.html" class="btn btn-ghost" style="text-decoration:none" title="Go to EVE Orders Dashboard">Orders</a>
-    <span class="sep"></span>
     <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">↺ Reset</button>
     <button class="btn btn-ghost" id="settings-toggle">⚙ Settings</button>
     <button class="btn btn-primary" id="fetch-btn" disabled>▶ Fetch Prices</button>
