@@ -109,7 +109,6 @@
     /* ── Dashboard ── */
     #dashboard-view { padding: 20px; max-width: 1500px; margin: 0 auto; }
 
-    /* ── Stats bar ── */
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .stat-card {
       background: var(--bg2);
@@ -179,6 +178,8 @@
     /* ── Toolbar ── */
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .toolbar-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); flex: 1; }
+    .favorite-presets-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .favorite-presets-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-family: var(--display); }
     .filter-group { display: flex; gap: 4px; align-items: center; }
     .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
 
@@ -657,12 +658,26 @@
         <select id="owner-filter" onchange="setOwnerFilter(this.value)" title="Filter by order owner">
           <option value="all">All Owners</option>
         </select>
+        <input id="order-search" class="ticks-input" style="width:180px;text-align:left" type="search" placeholder="Search item..." oninput="setSearchQuery(this.value)" title="Filter orders by item name">
         <div id="loc-chip-wrap"></div>
         <button class="btn btn-secondary" onclick="resetFilters()" title="Clear all active filters">Reset</button>
       </div>
+      <div id="favorite-presets-bar" class="favorite-presets-bar"></div>
       <div class="settings-btn-wrap">
         <button class="btn btn-secondary" id="settings-btn" onclick="toggleSettings(event)" title="Settings, refresh and display options">⚙</button>
         <div class="settings-popover" id="settings-popover" style="display:none" onclick="event.stopPropagation()">
+          <div class="settings-row">
+            <span class="settings-label">Preset</span>
+            <select id="preset-select" onchange="applyPresetByName(this.value)" style="flex:1;min-width:0">
+              <option value="">No Preset</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <button class="btn btn-secondary" onclick="savePresetPrompt()" style="flex:1">Save</button>
+            <button class="btn btn-secondary" id="preset-favorite-btn" onclick="toggleSelectedPresetFavorite()" style="flex:1">Favorite</button>
+            <button class="btn btn-secondary" onclick="deleteSelectedPreset()" style="flex:1">Delete</button>
+          </div>
+          <div class="acct-divider" style="margin:6px 0"></div>
           <div class="settings-row">
             <span class="settings-label" title="Station: compare only against orders at the same station. Region: compare against the best price anywhere in the region.">Scope</span>
             <button class="filter-btn" data-us="station" onclick="setUcScope('station',this)" title="Undercut check vs orders at the same station only">Station</button>
@@ -712,6 +727,7 @@
             <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
             <th data-col="location" onclick="sortBy('location')" title="Click to sort by station name">      Location   <span id="si-location"></span></th>
             <th data-col="owner" onclick="sortBy('owner')" title="Click to sort by order owner">Owner <span id="si-owner"></span></th>
+            <th data-col="age" onclick="sortBy('age')" title="Click to sort by tracked order age">Order Age <span id="si-age"></span></th>
             <th data-col="expiry" onclick="sortBy('expiry')"   title="Click to sort by expiry date">       Expires     <span id="si-expiry"></span></th>
           </tr>
         </thead>
@@ -739,9 +755,9 @@
       <p>Once logged in you will see three sections:</p>
       <ul>
         <li><strong>Wallet Bar</strong> — Your personal and corp ISK balances. Use the division selector on the corp wallet to pick which wallet to display.</li>
-        <li><strong>Stats Bar</strong> — At-a-glance numbers: free order slots, undercut status (always visible), corp order counts (if you have the role), sell/buy values, and top items. Hover any card for a description.</li>
+        <li><strong>Stats Bar</strong> - At-a-glance numbers: free order slots, undercut status, corp order counts (if you have role access), sell/buy values, top items, and <em>Oldest Active</em>.</li>
         <li><strong>Station Breakdown</strong> — Your orders grouped by station with sell/buy counts and undercut flags. Click the header to collapse.</li>
-        <li><strong>Market Orders Table</strong> — Every active order with full detail, including an Owner column (your name for personal orders, issuer for corp orders). Click any station row above to filter the table to that station.</li>
+        <li><strong>Market Orders Table</strong> - Every active order with full detail, including owner, <em>Order Age</em>, and expiry. Click any station row above to filter the table to that station.</li>
       </ul>
 
       <h3>Filters</h3>
@@ -749,9 +765,10 @@
         <li><strong>All Types / Sell / Buy</strong> — Show only sell orders, only buy orders, or both.</li>
         <li><strong>All Sources / Personal / Corp</strong> — Switch between your personal orders and corp orders. Corp requires the Accountant or Market Manager role in your corporation.</li>
         <li><strong>All Status / Best Price / Undercut / Dupes</strong> — Filter by undercut status. <em>Dupes</em> shows items where you have more than one order at the same station.</li>
-        <li><strong>All Owners</strong> — Filter by the character that owns the order. Useful for corp orders with multiple traders.</li>
+        <li><strong>Owner filter</strong> - Includes <em>All Owners</em>, <em>Active Character</em>, and specific owner names.</li>
         <li><strong>Location chip</strong> — Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the ✕ on the chip to clear.</li>
-        <li><strong>Reset</strong> — Clears all active filters at once.</li>
+        <li><strong>Search</strong> - The search field filters item names using case-insensitive contains matching.</li>
+        <li><strong>Reset</strong> - Clears type/source/status/owner/search filters and active location chip.</li>
         <li><strong>Missing Sell Pace?</strong> — Open ⚙ Settings and check the <em>Sell Pace</em> box under Columns.</li>
       </ul>
 
@@ -761,10 +778,14 @@
         <li><strong>Station scope</strong> — Compares only against orders at the exact same station. Best for station traders.</li>
         <li><strong>Region scope</strong> — Compares against the best price anywhere in the region. Best for regional traders.</li>
         <li><strong>Ticks</strong> — EVE prices move in 0.01 ISK increments called ticks. Set how many ticks below the current best price the copy button will suggest. Default is 2 ticks.</li>
+        <li><strong>Pace Days</strong> - Controls the lookback window for Sell Pace calculations.</li>
       </ul>
 
       <h3>Copy Button (⎘)</h3>
-      <p>Clicking the copy icon on any order does two things simultaneously: copies the suggested undercut price to your clipboard, and opens the item's market window inside the EVE client (if the client is running). Paste the price directly into the <em>Modify Order</em> dialog.</p>
+      <p>Clicking the copy icon copies the suggested undercut price and attempts to open the item market window in the EVE client. Success/warn states are shown with button color feedback.</p>
+
+      <h3>Order Age Tracking</h3>
+      <p>Order age is tracked per <code>order_id</code> in local storage. Missing/closed orders are pruned after a 48-hour grace period to avoid stale buildup during temporary ESI issues.</p>
 
       <h3>Order Slots</h3>
       <p>The <strong>Personal Slots Free</strong> card shows how many more orders you can place, based on your Trade-related skills (Trade, Retail, Wholesale, Tycoon). The bar turns orange above 70% and red above 90% usage. Corp orders you placed yourself also consume your personal slots.</p>
@@ -781,10 +802,13 @@
       <h3>Settings (⚙)</h3>
       <p>The settings button in the toolbar opens a popover with:</p>
       <ul>
+        <li><strong>Presets</strong> - Save named presets, apply them later, and mark favorites.</li>
         <li><strong>Scope</strong> — Station or Region undercut comparison.</li>
         <li><strong>Ticks</strong> — Price undercut increment.</li>
+        <li><strong>Pace Days</strong> - Controls the lookback window for Sell Pace calculations.</li>
         <li><strong>Compact</strong> — Hides item icons and reduces row height for a denser view.</li>
         <li><strong>Refresh</strong> — Manually reload all orders and re-check market prices.</li>
+        <li><strong>Favorite presets bar</strong> - Favorited presets appear as quick chips beside filters in the toolbar.</li>
       </ul>
 
     </div>
@@ -826,6 +850,10 @@ const PKCE_V_KEY    = 'eve_pkce_v';
 const PKCE_S_KEY    = 'eve_pkce_s';
 const VISIBLE_COLS_KEY = 'eve_visible_columns';
 const TURNOVER_VISIBLE_MIGRATION_KEY = 'eve_turnover_visible_migrated_v1';
+const ORDER_AGE_INDEX_KEY = 'eve_order_age_index_v1';
+const FILTER_PRESETS_KEY = 'eve_filter_presets_v1';
+const ACTIVE_OWNER_FILTER = '__active__';
+const ORDER_AGE_PRUNE_GRACE_MS = 48 * 60 * 60 * 1000;
 
 // =============================================================
 // App state
@@ -844,10 +872,13 @@ let charSlotsMax   = 0;        // calculated from trade skills (0 = scope not gr
 let activeLocFilt  = null;     // location_id (number) or null for all stations
 let activeUcFilt       = 'all';   // all | best | undercut
 let activeOwnerFilt    = 'all';
+let activeSearchQuery  = '';
 let undercutStatus     = {};       // order_id → { status: 'loading'|'best'|'undercut'|'error', diff: 0, bestCompetitor: null }
 let turnoverStatus     = {};       // order_id → { status: 'loading'|'ok'|'bad'|'mid'|'na'|'error', avgDaily, unitsAhead, unitsToClear }
 let marketCache        = {};       // 'regionId:typeId' → { ourOrders, market }
 let undercutLastFetched = null;    // Date of last completed undercut check
+let orderAgeIndex      = loadOrderAgeIndex();
+let filterPresets      = loadFilterPresets();
 
 let undercutTicks = parseInt(localStorage.getItem('eve_uc_ticks') || '1');  // ticks to move when undercutting
 let undercutScope = localStorage.getItem('eve_uc_scope') || 'station';       // 'station' | 'region'
@@ -870,6 +901,7 @@ const columnDefs = [
   { key: 'total', label: 'Order Total' },
   { key: 'location', label: 'Location' },
   { key: 'owner', label: 'Owner' },
+  { key: 'age', label: 'Order Age' },
   { key: 'expiry', label: 'Expires' },
 ];
 let visibleCols = loadVisibleColumns();
@@ -1156,6 +1188,282 @@ function getOrderOwnerName(order, fallbackCharId = getActiveCharId()) {
   return ownerNames[ownerId] || `Character ${ownerId}`;
 }
 
+function loadOrderAgeIndex() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ORDER_AGE_INDEX_KEY) || '{}');
+    if (!raw || typeof raw !== 'object') return {};
+    const now = Date.now();
+    const normalized = {};
+    Object.entries(raw).forEach(([id, v]) => {
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        normalized[id] = { firstIssued: v, lastSeenActive: now };
+        return;
+      }
+      if (!v || typeof v !== 'object') return;
+      const firstIssued = Number(v.firstIssued);
+      const lastSeenActive = Number(v.lastSeenActive);
+      if (!Number.isFinite(firstIssued)) return;
+      normalized[id] = {
+        firstIssued,
+        lastSeenActive: Number.isFinite(lastSeenActive) ? lastSeenActive : now,
+      };
+    });
+    return normalized;
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveOrderAgeIndex() {
+  localStorage.setItem(ORDER_AGE_INDEX_KEY, JSON.stringify(orderAgeIndex));
+}
+
+function trackOrderAges(orders) {
+  const now = Date.now();
+  const activeIds = new Set();
+  let changed = false;
+
+  orders.forEach(o => {
+    const id = String(o.order_id || '');
+    if (!id) return;
+    activeIds.add(id);
+    const issued = new Date(o.issued).getTime();
+    if (!Number.isFinite(issued)) return;
+    const prev = orderAgeIndex[id];
+    if (!prev || typeof prev !== 'object') {
+      orderAgeIndex[id] = { firstIssued: issued, lastSeenActive: now };
+      changed = true;
+      return;
+    }
+    const nextFirstIssued = Number.isFinite(prev.firstIssued)
+      ? Math.min(prev.firstIssued, issued)
+      : issued;
+    if (nextFirstIssued !== prev.firstIssued || prev.lastSeenActive !== now) {
+      orderAgeIndex[id] = { firstIssued: nextFirstIssued, lastSeenActive: now };
+      changed = true;
+    }
+  });
+
+  Object.entries(orderAgeIndex).forEach(([id, entry]) => {
+    if (activeIds.has(id)) return;
+    const lastSeenActive = Number(entry && entry.lastSeenActive);
+    const shouldPrune = !Number.isFinite(lastSeenActive) || (now - lastSeenActive) > ORDER_AGE_PRUNE_GRACE_MS;
+    if (shouldPrune) {
+      delete orderAgeIndex[id];
+      changed = true;
+    }
+  });
+
+  if (changed) saveOrderAgeIndex();
+}
+
+function getOrderAgeMs(order) {
+  const id = String(order.order_id || '');
+  const entry = orderAgeIndex[id];
+  const firstSeen = (entry && typeof entry === 'object') ? Number(entry.firstIssued) : Number(entry);
+  const issued = new Date(order.issued).getTime();
+  const start = Number.isFinite(firstSeen) ? firstSeen : issued;
+  if (!Number.isFinite(start)) return 0;
+  return Math.max(0, Date.now() - start);
+}
+
+function fmtAge(ms) {
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 48) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d`;
+}
+
+function getOrderAgeText(order) {
+  return fmtAge(getOrderAgeMs(order));
+}
+
+function normalizePresetEntry(entry) {
+  if (!entry || typeof entry !== 'object') return { config: null, favorite: false };
+  if (entry.config && typeof entry.config === 'object') {
+    return { config: entry.config, favorite: !!entry.favorite };
+  }
+  return { config: entry, favorite: false };
+}
+
+function getPresetConfig(name) {
+  const normalized = normalizePresetEntry(filterPresets[name]);
+  return normalized.config;
+}
+
+function isPresetFavorite(name) {
+  return normalizePresetEntry(filterPresets[name]).favorite;
+}
+
+function loadFilterPresets() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FILTER_PRESETS_KEY) || '{}');
+    if (!raw || typeof raw !== 'object') return {};
+    const out = {};
+    Object.entries(raw).forEach(([name, entry]) => {
+      const normalized = normalizePresetEntry(entry);
+      if (normalized.config) out[name] = normalized;
+    });
+    return out;
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveFilterPresets() {
+  localStorage.setItem(FILTER_PRESETS_KEY, JSON.stringify(filterPresets));
+}
+
+function buildCurrentPreset() {
+  return {
+    type: activeTypeFilt,
+    src: activeSrcFilt,
+    undercut: activeUcFilt,
+    owner: activeOwnerFilt,
+    search: activeSearchQuery,
+    sortCol,
+    sortDir,
+    ucScope: undercutScope,
+    ucTicks: undercutTicks,
+    paceDays: turnoverDays,
+    compactMode,
+  };
+}
+
+function renderFavoritePresetBar(selectedName = '') {
+  const bar = document.getElementById('favorite-presets-bar');
+  if (!bar) return;
+  const favorites = Object.keys(filterPresets)
+    .filter(name => isPresetFavorite(name))
+    .sort((a, b) => a.localeCompare(b));
+
+  if (!favorites.length) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+
+  const chips = favorites.map(name => {
+    const active = name === selectedName ? ' f-active' : '';
+    const jsName = escHtml(JSON.stringify(name));
+    return `<button class="filter-btn${active}" onclick="applyPresetByName(${jsName})" title="Apply preset: ${escHtml(name)}">${escHtml(name)}</button>`;
+  }).join('');
+
+  bar.style.display = 'flex';
+  bar.innerHTML = `<span class="favorite-presets-label">Favorites</span>${chips}`;
+}
+
+function updatePresetFavoriteButton() {
+  const sel = document.getElementById('preset-select');
+  const btn = document.getElementById('preset-favorite-btn');
+  if (!sel || !btn) return;
+  if (!sel.value) {
+    btn.disabled = true;
+    btn.textContent = 'Favorite';
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = isPresetFavorite(sel.value) ? 'Unfavorite' : 'Favorite';
+}
+
+function renderPresetOptions(selectedName = '') {
+  const sel = document.getElementById('preset-select');
+  if (!sel) return;
+  const names = Object.keys(filterPresets).sort((a, b) => a.localeCompare(b));
+  sel.innerHTML = '<option value="">No Preset</option>' + names
+    .map(name => {
+      const prefix = isPresetFavorite(name) ? '* ' : '';
+      return `<option value="${escHtml(name)}">${prefix}${escHtml(name)}</option>`;
+    })
+    .join('');
+  const active = names.includes(selectedName) ? selectedName : '';
+  sel.value = active;
+  renderFavoritePresetBar(active);
+  updatePresetFavoriteButton();
+}
+
+function applyPreset(preset) {
+  if (!preset || typeof preset !== 'object') return;
+  activeTypeFilt = preset.type || 'all';
+  activeSrcFilt = preset.src || 'all';
+  activeUcFilt = preset.undercut || 'all';
+  activeOwnerFilt = preset.owner || 'all';
+  activeSearchQuery = preset.search || '';
+  sortCol = preset.sortCol || 'expiry';
+  sortDir = preset.sortDir === -1 ? -1 : 1;
+  undercutScope = preset.ucScope || undercutScope;
+  undercutTicks = Math.max(1, parseInt(preset.ucTicks || undercutTicks, 10) || 1);
+  turnoverDays = Math.min(90, Math.max(1, parseInt(preset.paceDays || turnoverDays, 10) || 7));
+  compactMode = !!preset.compactMode;
+
+  localStorage.setItem('eve_uc_scope', undercutScope);
+  localStorage.setItem('eve_uc_ticks', undercutTicks);
+  localStorage.setItem('eve_turnover_days', turnoverDays);
+  localStorage.setItem('eve_compact', compactMode ? '1' : '0');
+
+  document.getElementById('type-filter').value = activeTypeFilt;
+  document.getElementById('src-filter').value = activeSrcFilt;
+  document.getElementById('uc-filter').value = activeUcFilt;
+  document.getElementById('owner-filter').value = activeOwnerFilt;
+  const searchEl = document.getElementById('order-search');
+  if (searchEl) searchEl.value = activeSearchQuery;
+
+  initUcSettings();
+  applyCompact();
+  refreshSortIndicators();
+  renderStats();
+  renderStationBreakdown();
+  renderOrders();
+}
+
+function applyPresetByName(name) {
+  if (!name) {
+    renderFavoritePresetBar('');
+    updatePresetFavoriteButton();
+    return;
+  }
+  const preset = getPresetConfig(name);
+  if (!preset) return;
+  applyPreset(preset);
+  renderFavoritePresetBar(name);
+  updatePresetFavoriteButton();
+}
+
+function savePresetPrompt() {
+  const name = (prompt('Preset name?') || '').trim();
+  if (!name) return;
+  const existing = normalizePresetEntry(filterPresets[name]);
+  filterPresets[name] = {
+    config: buildCurrentPreset(),
+    favorite: existing.favorite,
+  };
+  saveFilterPresets();
+  renderPresetOptions(name);
+}
+
+function toggleSelectedPresetFavorite() {
+  const sel = document.getElementById('preset-select');
+  if (!sel || !sel.value) return;
+  const name = sel.value;
+  const existing = normalizePresetEntry(filterPresets[name]);
+  if (!existing.config) return;
+  filterPresets[name] = {
+    config: existing.config,
+    favorite: !existing.favorite,
+  };
+  saveFilterPresets();
+  renderPresetOptions(name);
+}
+
+function deleteSelectedPreset() {
+  const sel = document.getElementById('preset-select');
+  if (!sel || !sel.value) return;
+  delete filterPresets[sel.value];
+  saveFilterPresets();
+  renderPresetOptions('');
+}
 function updateOwnerFilterOptions(activeCharId = getActiveCharId()) {
   const sel = document.getElementById('owner-filter');
   if (!sel) return;
@@ -1163,10 +1471,13 @@ function updateOwnerFilterOptions(activeCharId = getActiveCharId()) {
   const options = ownerIds
     .map(id => ({ id, name: ownerNames[id] || `Character ${id}` }))
     .sort((a, b) => a.name.localeCompare(b.name));
-  sel.innerHTML = '<option value="all">All Owners</option>' + options
-    .map(o => `<option value="${escHtml(o.id)}">${escHtml(o.name)}</option>`)
-    .join('');
-  if (!options.some(o => o.id === activeOwnerFilt)) activeOwnerFilt = 'all';
+  sel.innerHTML = '<option value="all">All Owners</option>'
+    + '<option value="' + ACTIVE_OWNER_FILTER + '">Active Character</option>'
+    + options
+      .map(o => `<option value="${escHtml(o.id)}">${escHtml(o.name)}</option>`)
+      .join('');
+  const ownerMatch = options.some(o => o.id === activeOwnerFilt);
+  if (activeOwnerFilt !== 'all' && activeOwnerFilt !== ACTIVE_OWNER_FILTER && !ownerMatch) activeOwnerFilt = 'all';
   sel.value = activeOwnerFilt;
 }
 
@@ -1327,6 +1638,7 @@ async function loadOrders() {
     } catch (_) { walletPersonal = null; }
 
     allOrders = [...personalOrders, ...corpOrders];
+    trackOrderAges(allOrders);
 
     // Corp orders issued by this character use their personal order slots too
     const corpOrdersByChar = corpOrders.filter(o => o.issued_by === +charId);
@@ -1437,7 +1749,12 @@ function getFilteredOrders({ includeLocation = true } = {}) {
   if (activeSrcFilt === 'personal') orders = orders.filter(o => o._src === 'personal');
   if (activeSrcFilt === 'corp')     orders = orders.filter(o => o._src === 'corp');
 
-  if (activeOwnerFilt !== 'all') orders = orders.filter(o => getOrderOwnerId(o) === activeOwnerFilt);
+  if (activeOwnerFilt === ACTIVE_OWNER_FILTER) {
+    const activeCharId = String(getActiveCharId() || '');
+    orders = orders.filter(o => getOrderOwnerId(o) === activeCharId);
+  } else if (activeOwnerFilt !== 'all') {
+    orders = orders.filter(o => getOrderOwnerId(o) === activeOwnerFilt);
+  }
 
   if (includeLocation && activeLocFilt !== null) orders = orders.filter(o => o.location_id === activeLocFilt);
 
@@ -1449,11 +1766,15 @@ function getFilteredOrders({ includeLocation = true } = {}) {
     orders = orders.filter(o => count[`${o.type_id}:${o.location_id}`] > 1);
   }
 
+  if (activeSearchQuery.trim()) {
+    const q = activeSearchQuery.trim().toLowerCase();
+    orders = orders.filter(o => (typeNames[o.type_id] || `Type ${o.type_id}`).toLowerCase().includes(q));
+  }
+
   return orders;
 }
 
 // =============================================================
-// Render: stats bar
 // =============================================================
 function renderStats() {
   // Respect active location filter — all cards (except personal slots) react to it
@@ -1485,6 +1806,13 @@ function renderStats() {
   const topOrderName = topOrder ? (typeNames[topOrder.type_id] || `Type ${topOrder.type_id}`) : '—';
   const topOrderVal  = topOrder ? topOrder.price * topOrder.volume_remain : 0;
   const topOrderSub  = topOrder ? `${fmtNum(topOrder.volume_remain)} × ${fmtISK(topOrder.price)}` : '';
+
+  const oldestOrder = scopeAll.reduce((oldest, o) => {
+    if (!oldest) return o;
+    return getOrderAgeMs(o) > getOrderAgeMs(oldest) ? o : oldest;
+  }, null);
+  const oldestName = oldestOrder ? (typeNames[oldestOrder.type_id] || `Type ${oldestOrder.type_id}`) : '—';
+  const oldestAge = oldestOrder ? getOrderAgeText(oldestOrder) : '—';
 
   // Personal slots — never location-filtered, always character-level
   const slotsRemain = charSlotsMax > 0 ? charSlotsMax - charSlotsUsed : null;
@@ -1553,6 +1881,11 @@ function renderStats() {
       <div class="stat-label">Most Valuable Order${l}</div>
       <div class="stat-value gold" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(topOrderName)}</div>
       <div class="stat-sub">${fmtISK(topOrderVal)} · ${topOrderSub}</div>
+    </div>
+    <div class="stat-card stat-wide" title="Oldest tracked order in current scope by first seen issued timestamp.">
+      <div class="stat-label">Oldest Active${l}</div>
+      <div class="stat-value" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(oldestName)}</div>
+      <div class="stat-sub">${oldestAge}</div>
     </div>
     ${warnHtml}
   `;
@@ -1665,6 +1998,7 @@ function renderOrders() {
     const isBuy  = o.is_buy_order;
     const orderTotal = o.price * o.volume_remain;
     const ownerName  = getOrderOwnerName(o);
+    const ageText    = getOrderAgeText(o);
 
     const expiresMs   = new Date(o.issued).getTime() + o.duration * 86_400_000;
     const daysLeft    = Math.ceil((expiresMs - now) / 86_400_000);
@@ -1732,6 +2066,7 @@ function renderOrders() {
         <td class="r total" data-col="total">${fmtISK(orderTotal)}</td>
         <td class="loc-cell" data-col="location" title="Click to filter to this station" onclick="setLocFilter(${o.location_id})">${escHtml(loc)}</td>
         <td data-col="owner">${escHtml(ownerName)}</td>
+        <td data-col="age">${ageText}</td>
         <td class="${expiryClass}" data-col="expiry">${expiryText}</td>
       </tr>
     `;
@@ -1771,6 +2106,7 @@ function doSort(orders) {
       case 'total':    av = a.price * a.volume_remain;  bv = b.price * b.volume_remain;  break;
       case 'location': av = locNames[a.location_id] || ''; bv = locNames[b.location_id] || ''; break;
       case 'owner':    av = getOrderOwnerName(a); bv = getOrderOwnerName(b); break;
+      case 'age':      av = getOrderAgeMs(a); bv = getOrderAgeMs(b); break;
       case 'expiry':
         av = new Date(a.issued).getTime() + a.duration * 86_400_000;
         bv = new Date(b.issued).getTime() + b.duration * 86_400_000;
@@ -1783,18 +2119,20 @@ function doSort(orders) {
   });
 }
 
-function sortBy(col) {
-  sortDir = sortCol === col ? -sortDir : 1;
-  sortCol = col;
-
-  const cols = ['item','type','status','turnover','price','volume','total','location','owner','expiry'];
+function refreshSortIndicators() {
+  const cols = ['item','type','status','turnover','price','volume','total','location','owner','age','expiry'];
   cols.forEach(c => {
     const ind = document.getElementById(`si-${c}`);
     const th  = ind?.parentElement;
     if (ind) ind.textContent = c === sortCol ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
     if (th)  th.classList.toggle('th-sorted', c === sortCol);
   });
+}
 
+function sortBy(col) {
+  sortDir = sortCol === col ? -sortDir : 1;
+  sortCol = col;
+  refreshSortIndicators();
   renderOrders();
 }
 
@@ -1829,6 +2167,13 @@ function setOwnerFilter(filter) {
   renderOrders();
 }
 
+function setSearchQuery(value) {
+  activeSearchQuery = value || '';
+  renderStats();
+  renderStationBreakdown();
+  renderOrders();
+}
+
 function toggleCompact() {
   compactMode = !compactMode;
   localStorage.setItem('eve_compact', compactMode ? '1' : '0');
@@ -1847,20 +2192,26 @@ function resetFilters() {
   activeSrcFilt  = 'all';
   activeUcFilt   = 'all';
   activeOwnerFilt = 'all';
+  activeSearchQuery = '';
+  activeLocFilt = null;
   document.getElementById('type-filter').value = 'all';
   document.getElementById('src-filter').value  = 'all';
   document.getElementById('uc-filter').value   = 'all';
   document.getElementById('owner-filter').value = 'all';
+  const searchEl = document.getElementById('order-search');
+  if (searchEl) searchEl.value = '';
+  renderLocChip();
   renderStats();
   renderStationBreakdown();
   renderOrders();
 }
 
 function toggleSettings(e) {
-  e.stopPropagation();
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   const p = document.getElementById('settings-popover');
   if (!p) return;
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  const shown = getComputedStyle(p).display !== 'none';
+  p.style.display = shown ? 'none' : 'block';
 }
 
 // =============================================================
@@ -2214,10 +2565,8 @@ function copyUndercut(orderId, isBuy, ourPrice, typeId) {
   // Show ✓ for ~15 seconds so you can see where you are in the list
   const btn = document.getElementById(`copy-btn-${orderId}`);
   if (btn) {
-    btn.textContent = '✓';
     btn.classList.add('copy-btn-ok');
     setTimeout(() => {
-      btn.textContent = '⎘';
       btn.classList.remove('copy-btn-ok');
     }, 15000);
   }
@@ -2233,12 +2582,10 @@ async function openMarketWindow(typeId, orderId) {
     if (err.status === 403) {
       const btn = document.getElementById(`copy-btn-${orderId}`);
       if (btn) {
-        btn.textContent = '!';
         btn.classList.remove('copy-btn-ok');
         btn.classList.add('copy-btn-warn');
         btn.title = 'Re-login required to enable in-game window (new scope needed)';
         setTimeout(() => {
-          btn.textContent = '⎘';
           btn.classList.remove('copy-btn-warn');
           btn.title = 'Copy suggested price & open in-game market window';
         }, 15000);
@@ -2319,8 +2666,10 @@ async function init() {
     initUcSettings();
     ensureTurnoverColumnVisible();
     renderColumnToggles();
+    renderPresetOptions();
     applyCompact();
     applyColumnVisibility();
+    refreshSortIndicators();
     loadOrders();
     // Close the account dropdown when clicking anywhere outside it
     document.addEventListener('click', () => {
@@ -2339,3 +2688,14 @@ init();
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
