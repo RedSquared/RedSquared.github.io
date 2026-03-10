@@ -491,10 +491,27 @@
       padding: 0;
     }
     .hw-div-select:hover { color: var(--text); }
-    .stat-card .hw-card { width: 100%; min-width: 0; }
-    .stat-card .hw-row { width: 100%; min-width: 0; }
-    .stat-card .hw-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-    .stat-card .hw-val { flex-shrink: 0; }
+    .stat-card .hw-card {
+      width: 100%;
+      min-width: 0;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      gap: 4px;
+    }
+    .stat-card .hw-row {
+      width: 100%;
+      min-width: 0;
+      justify-content: flex-start;
+      gap: 6px;
+    }
+    .stat-card .hw-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-card .hw-val { margin-left: auto; flex-shrink: 0; }
+    .stat-card .hw-divider { display: none; }
     .stat-card .hw-div-select { max-width: 84px; }
     .wallet-value {
       font-family: var(--mono);
