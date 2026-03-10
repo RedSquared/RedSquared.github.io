@@ -178,7 +178,7 @@
     /* ── Toolbar ── */
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .toolbar-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); flex: 1; }
-    .favorite-presets-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .favorite-presets-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; margin: -4px 0 10px; }
     .favorite-presets-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-family: var(--display); }
     .filter-group { display: flex; gap: 4px; align-items: center; }
     .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
@@ -662,7 +662,7 @@
         <div id="loc-chip-wrap"></div>
         <button class="btn btn-secondary" onclick="resetFilters()" title="Clear all active filters">Reset</button>
       </div>
-      <div id="favorite-presets-bar" class="favorite-presets-bar"></div>
+      
       <div class="settings-btn-wrap">
         <button class="btn btn-secondary" id="settings-btn" onclick="toggleSettings(event)" title="Settings, refresh and display options">⚙</button>
         <div class="settings-popover" id="settings-popover" style="display:none" onclick="event.stopPropagation()">
@@ -707,6 +707,7 @@
         </div>
       </div>
     </div>
+    <div id="favorite-presets-bar" class="favorite-presets-bar" onclick="onFavoritePresetClick(event)"></div>
 
     <!-- Orders table -->
     <div class="table-wrap">
@@ -1349,8 +1350,7 @@ function renderFavoritePresetBar(selectedName = '') {
 
   const chips = favorites.map(name => {
     const active = name === selectedName ? ' f-active' : '';
-    const jsName = escHtml(JSON.stringify(name));
-    return `<button class="filter-btn${active}" onclick="applyPresetByName(${jsName})" title="Apply preset: ${escHtml(name)}">${escHtml(name)}</button>`;
+    return `<button class="filter-btn${active}" data-preset-name="${escHtml(name)}" title="Apply preset: ${escHtml(name)}">${escHtml(name)}</button>`;
   }).join('');
 
   bar.style.display = 'flex';
@@ -1431,6 +1431,13 @@ function applyPresetByName(name) {
   applyPreset(preset);
   renderFavoritePresetBar(name);
   updatePresetFavoriteButton();
+}
+
+function onFavoritePresetClick(e) {
+  const btn = e.target.closest('button[data-preset-name]');
+  if (!btn) return;
+  const name = btn.dataset.presetName || '';
+  applyPresetByName(name);
 }
 
 function savePresetPrompt() {
@@ -2694,6 +2701,11 @@ init();
 
 </body>
 </html>
+
+
+
+
+
 
 
 
