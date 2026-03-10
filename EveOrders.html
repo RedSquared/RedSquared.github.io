@@ -110,6 +110,7 @@
     #dashboard-view { padding: 20px; max-width: 1500px; margin: 0 auto; }
 
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-row-break { flex-basis: 100%; height: 0; }
     .stat-card {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -178,7 +179,7 @@
     /* ── Toolbar ── */
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .toolbar-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); flex: 1; }
-    .favorite-presets-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; margin: -4px 0 10px; }
+    .favorite-presets-bar { display: none; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; width: 100%; margin: -4px 0 10px; }
     .favorite-presets-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-family: var(--display); }
     .filter-group { display: flex; gap: 4px; align-items: center; }
     .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
@@ -726,6 +727,7 @@
             <th data-col="price" onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
             <th data-col="volume" onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
             <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price × qty)">Order Total <span id="si-total"></span></th>
+            <th data-col="uc_total" onclick="sortBy('uc_total')" class="r" title="Click to sort by undercut value (price difference × qty remaining)">Undercut Total <span id="si-uc_total"></span></th>
             <th data-col="location" onclick="sortBy('location')" title="Click to sort by station name">      Location   <span id="si-location"></span></th>
             <th data-col="owner" onclick="sortBy('owner')" title="Click to sort by order owner">Owner <span id="si-owner"></span></th>
             <th data-col="age" onclick="sortBy('age')" title="Click to sort by tracked order age">Order Age <span id="si-age"></span></th>
@@ -900,6 +902,7 @@ const columnDefs = [
   { key: 'price', label: 'Unit Price' },
   { key: 'volume', label: 'Qty' },
   { key: 'total', label: 'Order Total' },
+  { key: 'uc_total', label: 'Undercut Total' },
   { key: 'location', label: 'Location' },
   { key: 'owner', label: 'Owner' },
   { key: 'age', label: 'Order Age' },
@@ -1839,6 +1842,13 @@ function renderStats() {
   const ucCut     = scopeAll.filter(o => undercutStatus[o.order_id]?.status === 'undercut').length;
   const ucBest    = scopeAll.filter(o => undercutStatus[o.order_id]?.status === 'best').length;
   const ucPending = scopeAll.some(o => !undercutStatus[o.order_id] || undercutStatus[o.order_id].status === 'loading');
+  const undercutRisk = scopeAll.reduce((sum, o) => {
+    const uc = undercutStatus[o.order_id];
+    if (!uc || uc.status !== 'undercut' || !Number.isFinite(uc.diff)) return sum;
+    return sum + (uc.diff * (o.volume_remain || 0));
+  }, 0);
+  const staleMs = 14 * 24 * 60 * 60 * 1000;
+  const staleCount = scopeAll.filter(o => getOrderAgeMs(o) >= staleMs).length;
   const ucRedPct   = ucTotal > 0 ? Math.round((ucCut  / ucTotal) * 100) : 0;
   const ucGrnPct   = ucTotal > 0 ? Math.round((ucBest / ucTotal) * 100) : 0;
   const ucHtmlStat = ucPending
@@ -1881,19 +1891,30 @@ function renderStats() {
       <div class="stat-label">Buy Volume${l}</div>
       <div class="stat-value blue">${fmtISK(buyVal)}</div>
     </div>
-    <div class="stat-card stat-wide" title="Your sell order with the highest unit price across all your orders.">
+    <div class="stat-card" title="Sum of undercut price difference times remaining quantity for undercut orders in scope.">
+      <div class="stat-label">Undercut ISK at Risk${l}</div>
+      <div class="stat-value ${undercutRisk > 0 ? 'red' : 'green'}">${fmtISK(undercutRisk)}</div>
+      <div class="stat-sub">${ucCut} orders undercut</div>
+    </div>
+    <div class="stat-card" title="Active orders with tracked age of at least 14 days in current scope.">
+      <div class="stat-label">Stale Orders (14d+)${l}</div>
+      <div class="stat-value ${staleCount > 0 ? 'red' : 'green'}">${staleCount}</div>
+      <div class="stat-sub">${scopeAll.length} total in scope</div>
+    </div>
+    <div class="stat-row-break"></div>
+    <div class="stat-card" title="Your sell order with the highest unit price across all your orders.">
       <div class="stat-label">Most Valuable Item${l}</div>
       <div class="stat-value gold" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(topItemName)}</div>
       <div class="stat-sub">${fmtISK(topItemVal)} / unit</div>
     </div>
-    <div class="stat-card stat-wide" title="Your single order with the highest total value (price × remaining qty) across all your orders.">
+    <div class="stat-card" title="Your single order with the highest total value (price × remaining qty) across all your orders.">
       <div class="stat-label">Most Valuable Order${l}</div>
       <div class="stat-value gold" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(topOrderName)}</div>
       <div class="stat-sub">${fmtISK(topOrderVal)} · ${topOrderSub}</div>
     </div>
-    <div class="stat-card stat-wide" title="Oldest tracked order in current scope by first seen issued timestamp.">
+    <div class="stat-card" title="Oldest tracked order in current scope by first seen issued timestamp.">
       <div class="stat-label">Oldest Active${l}</div>
-      <div class="stat-value" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(oldestName)}</div>
+      <div class="stat-value">${escHtml(oldestName)}</div>
       <div class="stat-sub">${oldestAge}</div>
     </div>
     ${warnHtml}
@@ -2032,6 +2053,10 @@ function renderOrders() {
       ucHtml = `<span class="uc-loading">—</span>`;
     }
 
+    const ucTotalVal = (!uc || uc.status === 'loading' || uc.status === 'error')
+      ? null
+      : (uc.status === 'undercut' && Number.isFinite(uc.diff) ? Math.max(0, uc.diff * (o.volume_remain || 0)) : 0);
+
     const turn = turnoverStatus[o.order_id];
     let turnHtml = '<span class="uc-loading">—</span>';
     if (!isBuy) {
@@ -2073,6 +2098,7 @@ function renderOrders() {
           <span class="vol-text">${fmtNum(o.volume_remain)}<span style="color:var(--text2)"> / </span>${fmtNum(o.volume_total)}</span>
         </td>
         <td class="r total" data-col="total">${fmtISK(orderTotal)}</td>
+        <td class="r" data-col="uc_total">${ucTotalVal === null ? '<span class="uc-loading">�</span>' : fmtISK(ucTotalVal)}</td>
         <td class="loc-cell" data-col="location" title="Click to filter to this station" onclick="setLocFilter(${o.location_id})">${escHtml(loc)}</td>
         <td data-col="owner">${escHtml(ownerName)}</td>
         <td data-col="age">${ageText}</td>
@@ -2113,6 +2139,16 @@ function doSort(orders) {
       case 'price':    av = a.price;                   bv = b.price;                   break;
       case 'volume':   av = a.volume_remain;            bv = b.volume_remain;            break;
       case 'total':    av = a.price * a.volume_remain;  bv = b.price * b.volume_remain;  break;
+      case 'uc_total': {
+        const val = o => {
+          const s = undercutStatus[o.order_id];
+          if (!s || s.status === 'loading' || s.status === 'error') return -1;
+          if (s.status !== 'undercut' || !Number.isFinite(s.diff)) return 0;
+          return Math.max(0, s.diff * (o.volume_remain || 0));
+        };
+        av = val(a); bv = val(b);
+        break;
+      }
       case 'location': av = locNames[a.location_id] || ''; bv = locNames[b.location_id] || ''; break;
       case 'owner':    av = getOrderOwnerName(a); bv = getOrderOwnerName(b); break;
       case 'age':      av = getOrderAgeMs(a); bv = getOrderAgeMs(b); break;
@@ -2129,7 +2165,7 @@ function doSort(orders) {
 }
 
 function refreshSortIndicators() {
-  const cols = ['item','type','status','turnover','price','volume','total','location','owner','age','expiry'];
+  const cols = ['item','type','status','turnover','price','volume','total','uc_total','location','owner','age','expiry'];
   cols.forEach(c => {
     const ind = document.getElementById(`si-${c}`);
     const th  = ind?.parentElement;
@@ -2701,6 +2737,9 @@ init();
 
 </body>
 </html>
+
+
+
 
 
 
