@@ -180,7 +180,7 @@
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .toolbar-title { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); flex: 1; }
     .favorite-presets-bar { display: none; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; width: 100%; margin: -4px 0 10px; }
-    .favorite-presets-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-family: var(--display); }
+    .favorite-presets-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-family: var(--display); font-weight: 700; }
     .filter-group { display: flex; gap: 4px; align-items: center; }
     .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
 
@@ -288,6 +288,8 @@
 
     .price { color: var(--gold-bright); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
     .total { color: var(--text); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .uc-total-cell { color: var(--text2); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .age-cell { color: var(--text2); font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
 
     .qty-cell  { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
     .vol-track { width: 48px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
@@ -439,7 +441,6 @@
     /* ── Header wallets ── */
     #header-wallets {
       display: flex;
-      gap: 24px;
       align-items: center;
       flex: 1;
       justify-content: center;
@@ -447,8 +448,18 @@
     .hw-card {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      min-width: 260px;
+    }
+    .hw-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
     .hw-label {
       font-size: 10px;
@@ -467,6 +478,7 @@
       line-height: 1.2;
       white-space: nowrap;
     }
+    .hw-divider { height: 1px; background: var(--border); }
     .hw-div-select {
       background: transparent;
       border: none;
@@ -1713,43 +1725,13 @@ function updateCorpVisibility() {
 function renderWalletBar() {
   const el = document.getElementById('header-wallets');
   if (!el) return;
-
-  let html = '';
-
-  if (walletPersonal !== null) {
-    html += `
-      <div class="hw-card" title="Personal wallet balance">
-        <div class="hw-label">Personal</div>
-        <div class="hw-val green">${fmtISK(walletPersonal)}</div>
-      </div>`;
-  }
-
-  if (walletCorp !== null) {
-    const divObj  = walletCorp.find(d => d.division === walletCorpDivision) || walletCorp[0];
-    const balance = divObj ? divObj.balance : 0;
-    const opts    = walletCorp.map(d => {
-      const lbl = walletCorpNames[d.division] || (d.division === 1 ? 'Master' : `Div ${d.division}`);
-      return `<option value="${d.division}" ${d.division === walletCorpDivision ? 'selected' : ''}>${lbl}</option>`;
-    }).join('');
-
-    html += `
-      <div class="hw-card" title="Corp wallet balance — use selector to switch division">
-        <div class="hw-label">Corp <select class="hw-div-select" onchange="setCorpWalletDiv(+this.value)" title="Choose division">${opts}</select></div>
-        <div class="hw-val gold">${fmtISK(balance)}</div>
-      </div>`;
-  }
-
-  if (!html && walletPersonal === null && walletCorp === null) {
-    html = `<span style="font-size:12px;color:var(--orange)" title="Re-authorize to grant wallet scopes">⚠ wallet unavailable — <a href="#" onclick="logout();return false;" style="color:var(--blue)">re-auth</a></span>`;
-  }
-
-  el.innerHTML = html;
+  el.innerHTML = '';
 }
 
 function setCorpWalletDiv(div) {
   walletCorpDivision = div;
   localStorage.setItem('eve_corp_wallet_div', String(div));
-  renderWalletBar();
+  renderStats();
 }
 
 function getFilteredOrders({ includeLocation = true } = {}) {
@@ -1860,6 +1842,37 @@ function renderStats() {
          <div style="height:100%;width:${ucGrnPct}%;background:var(--green);transition:width .3s"></div>
        </div>`;
 
+  const walletStatHtml = (() => {
+    const hasPersonal = walletPersonal !== null;
+    const hasCorp = walletCorp !== null;
+
+    if (!hasPersonal && !hasCorp) {
+      return `<div class="stat-card" title="Wallet balances unavailable until wallet scopes are granted.">
+        <div class="stat-label">Wallets</div>
+        <div class="stat-sub" style="color:var(--orange)">wallet unavailable - <a href="#" onclick="logout();return false;" style="color:var(--blue)">re-auth</a></div>
+      </div>`;
+    }
+
+    let personalRow = '';
+    if (hasPersonal) {
+      personalRow = `<div class="hw-row"><div class="hw-label">Personal</div><div class="hw-val green">${fmtISK(walletPersonal)}</div></div>`;
+    }
+
+    let corpRow = '';
+    if (hasCorp) {
+      const divObj  = walletCorp.find(d => d.division === walletCorpDivision) || walletCorp[0];
+      const balance = divObj ? divObj.balance : 0;
+      const opts = walletCorp.map(d => {
+        const lbl = walletCorpNames[d.division] || (d.division === 1 ? 'Master' : `Div ${d.division}`);
+        return `<option value="${d.division}" ${d.division === walletCorpDivision ? 'selected' : ''}>${lbl}</option>`;
+      }).join('');
+
+      corpRow = `<div class="hw-row"><div class="hw-label">Corp <select class="hw-div-select" onchange="setCorpWalletDiv(+this.value)" title="Choose division">${opts}</select></div><div class="hw-val gold">${fmtISK(balance)}</div></div>`;
+    }
+
+    const divider = (personalRow && corpRow) ? '<div class="hw-divider"></div>' : '';
+    return `<div class="stat-card" title="Personal and corporation wallet balances."><div class="stat-label">Wallets</div><div class="hw-card">${personalRow}${divider}${corpRow}</div></div>`;
+  })();
   const warnHtml = corpOrdersWarning
     ? `<div class="stat-card" style="border-left:3px solid var(--orange);flex-basis:100%">
          <div class="stat-label">Notice</div>
@@ -1883,6 +1896,11 @@ function renderStats() {
       <div class="stat-label">Undercut${l}</div>
       ${ucHtmlStat}
     </div>
+    <div class="stat-card" title="Active orders with tracked age of at least 14 days in current scope.">
+      <div class="stat-label">Stale Orders (14d+)${l}</div>
+      <div class="stat-value ${staleCount > 0 ? 'red' : 'green'}">${staleCount}</div>
+      <div class="stat-sub">${scopeAll.length} total in scope</div>
+    </div>
     <div class="stat-card" title="Total ISK value of all active sell orders (price × remaining quantity).">
       <div class="stat-label">Sell Value${l}</div>
       <div class="stat-value gold">${fmtISK(sellVal)}</div>
@@ -1891,16 +1909,12 @@ function renderStats() {
       <div class="stat-label">Buy Volume${l}</div>
       <div class="stat-value blue">${fmtISK(buyVal)}</div>
     </div>
-    <div class="stat-card" title="Sum of undercut price difference times remaining quantity for undercut orders in scope.">
-      <div class="stat-label">Undercut ISK at Risk${l}</div>
+    <div class="stat-card" title="Total undercut ISK across undercut orders in scope (price difference times remaining quantity).">
+      <div class="stat-label">Total Undercut ISK${l}</div>
       <div class="stat-value ${undercutRisk > 0 ? 'red' : 'green'}">${fmtISK(undercutRisk)}</div>
       <div class="stat-sub">${ucCut} orders undercut</div>
     </div>
-    <div class="stat-card" title="Active orders with tracked age of at least 14 days in current scope.">
-      <div class="stat-label">Stale Orders (14d+)${l}</div>
-      <div class="stat-value ${staleCount > 0 ? 'red' : 'green'}">${staleCount}</div>
-      <div class="stat-sub">${scopeAll.length} total in scope</div>
-    </div>
+    ${walletStatHtml}
     <div class="stat-row-break"></div>
     <div class="stat-card" title="Your sell order with the highest unit price across all your orders.">
       <div class="stat-label">Most Valuable Item${l}</div>
@@ -1914,7 +1928,7 @@ function renderStats() {
     </div>
     <div class="stat-card" title="Oldest tracked order in current scope by first seen issued timestamp.">
       <div class="stat-label">Oldest Active${l}</div>
-      <div class="stat-value">${escHtml(oldestName)}</div>
+      <div class="stat-value purple">${escHtml(oldestName)}</div>
       <div class="stat-sub">${oldestAge}</div>
     </div>
     ${warnHtml}
@@ -2098,10 +2112,10 @@ function renderOrders() {
           <span class="vol-text">${fmtNum(o.volume_remain)}<span style="color:var(--text2)"> / </span>${fmtNum(o.volume_total)}</span>
         </td>
         <td class="r total" data-col="total">${fmtISK(orderTotal)}</td>
-        <td class="r" data-col="uc_total">${ucTotalVal === null ? '<span class="uc-loading">�</span>' : fmtISK(ucTotalVal)}</td>
+        <td class="r uc-total-cell" data-col="uc_total">${ucTotalVal === null ? '<span class="uc-loading">�</span>' : fmtISK(ucTotalVal)}</td>
         <td class="loc-cell" data-col="location" title="Click to filter to this station" onclick="setLocFilter(${o.location_id})">${escHtml(loc)}</td>
         <td data-col="owner">${escHtml(ownerName)}</td>
-        <td data-col="age">${ageText}</td>
+        <td class="age-cell" data-col="age">${ageText}</td>
         <td class="${expiryClass}" data-col="expiry">${expiryText}</td>
       </tr>
     `;
