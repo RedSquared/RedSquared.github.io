@@ -924,6 +924,8 @@ function getActiveCharId() {
 
 function setActiveAccount(charId) {
   localStorage.setItem(ACTIVE_KEY, charId);
+  resetFilters();
+  renderPresetOptions('');
   renderHeaderChar();
   loadOrders();
 }
@@ -2198,6 +2200,10 @@ function resetFilters() {
   document.getElementById('src-filter').value  = 'all';
   document.getElementById('uc-filter').value   = 'all';
   document.getElementById('owner-filter').value = 'all';
+  const presetSel = document.getElementById('preset-select');
+  if (presetSel) presetSel.value = '';
+  renderFavoritePresetBar('');
+  updatePresetFavoriteButton();
   const searchEl = document.getElementById('order-search');
   if (searchEl) searchEl.value = '';
   renderLocChip();
@@ -2688,6 +2694,11 @@ init();
 
 </body>
 </html>
+
+
+
+
+
 
 
 
