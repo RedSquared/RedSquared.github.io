@@ -1,6 +1,6 @@
-# RedSquared.github.io
+﻿# New Eden Trade Lab
 
-A small collection of browser-based tools hosted on GitHub Pages. Everything runs client-side in plain HTML/CSS/JS.
+Independent EVE Online trade and industry tools hosted as a static GitHub Pages site. Everything runs client-side in plain HTML, CSS, and JavaScript.
 
 ---
 
@@ -8,53 +8,52 @@ A small collection of browser-based tools hosted on GitHub Pages. Everything run
 
 | File | What it is |
 |---|---|
-| `index.html` | Homepage with links to all tools |
-| `EveOrders.html` | EVE Orders dashboard (auth + character/corp order management) |
-| `eve-multisell.html` | EVE Multi Sell Pricer |
+| `index.html` | Homepage for New Eden Trade Lab |
+| `EveOrders.html` | Orders dashboard for active personal and corp market orders |
+| `eve-multisell.html` | Multi Sell Pricer for initial sell listing workflows |
 
 ---
 
-## EVE Orders Dashboard (`EveOrders.html`)
+## Orders Dashboard (`EveOrders.html`)
 
 ### What it does
 
-Shows your active personal and corporation market orders, highlights undercuts, estimates sell pace, and gives quick repricing workflow support (copy suggested price + open market window).
+Shows active personal and corporation market orders, highlights undercuts, estimates sell pace, and supports quick repricing workflows.
 
 ### Key features
 
 - Multi-account sign-in and account switching
-- Personal + corp order visibility (role-gated for corp)
-- Live undercut detection (station or region scope)
+- Personal and corp order visibility
+- Live undercut detection
 - Sell pace signal with configurable pace days
 - Owner filtering including **Active Character**
-- Item search filter (case-insensitive)
+- Item search filter
 - Sortable **Order Age** column
 - **Oldest Active** stat card
-- Presets (save/apply/delete)
-- Favorited presets surfaced as quick chips next to filters
-- Compact mode, column toggles, and wallet summary cards
+- Presets with favorite quick-access chips
+- Compact mode, column toggles, and wallet widgets
 
 ### Order age behavior
 
 - Age is tracked per `order_id` in local storage (`eve_order_age_index_v1`)
-- Uses oldest seen issued timestamp for that order id
+- Uses the oldest seen issued timestamp for each order id
 - If an order disappears, it is retained for a 48-hour grace period
 - Missing entries older than 48 hours are pruned automatically
 
 ### Presets
 
 - Presets are saved in local storage (`eve_filter_presets_v1`)
-- Saved fields include filters, search, sort, undercut scope/ticks, pace days, and compact mode
-- Presets can be favorited/unfavorited
+- Saved fields include filters, search, sort, undercut scope, ticks, pace days, and compact mode
+- Presets can be favorited or unfavorited
 - Favorited presets appear in a quick-access toolbar strip
 
 ---
 
-## EVE Multi Sell Pricer (`eve-multisell.html`)
+## Multi Sell Pricer (`eve-multisell.html`)
 
 ### What it does
 
-Takes a pasted EVE Multi Sell export and calculates suggested sell prices from live market data at the station you choose.
+Takes a pasted EVE Multi Sell export and calculates suggested sell prices from live market data at the selected station.
 
 ### How to use
 
@@ -69,14 +68,15 @@ Takes a pasted EVE Multi Sell export and calculates suggested sell prices from l
 
 ### Notes
 
-- Runs fully client-side; no backend
+- Runs fully client-side with no backend
 - Uses EVE ESI market endpoints
-- Falls back to Jita/Amarr with markup when target station has no sells
+- Falls back to Jita or Amarr with markup when target station has no sells
 
 ---
 
 ## Technical notes
 
-- No build step, no framework, no package dependencies
+- No build step, no framework, and no package dependencies
 - Safe for GitHub Pages static hosting
 - Data persistence uses browser `localStorage`
+- Branding and legal copy are set up for independent third-party community use
