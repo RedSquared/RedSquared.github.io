@@ -1,6 +1,6 @@
 ﻿# New Eden Trade Lab
 
-Independent EVE Online trade and industry tools hosted as a static GitHub Pages site. Everything runs client-side in plain HTML, CSS, and JavaScript.
+Independent EVE Online trade tools hosted as a static GitHub Pages site. Everything runs client-side in plain HTML, CSS, and JavaScript.
 
 ---
 
@@ -80,3 +80,4 @@ Takes a pasted EVE Multi Sell export and calculates suggested sell prices from l
 - Safe for GitHub Pages static hosting
 - Data persistence uses browser `localStorage`
 - Branding and legal copy are set up for independent third-party community use
+
