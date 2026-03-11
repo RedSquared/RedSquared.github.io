@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Eden Trade Lab - Multi Sell Pricer</title>
-<meta name="description" content="Independent EVE Online trade and industry tools for market analysis, planning, and decision-making in New Eden.">
+<meta name="description" content="Independent EVE Online trade tools for pricing and market workflows in New Eden.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,46 +118,6 @@ footer {
 }
 footer a { color: var(--text-dim); text-decoration: none; }
 footer a:hover { color: var(--text-secondary); }
-.support-strip {
-  padding: 0 24px;
-  margin-bottom: 16px;
-}
-.support-card,
-.footer-block {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 16px 18px;
-}
-.support-title,
-.footer-brand {
-  font-family: var(--display);
-  text-transform: uppercase;
-  letter-spacing: 1.8px;
-}
-.support-title {
-  color: var(--gold);
-  font-size: 10px;
-  margin-bottom: 8px;
-}
-.support-copy,
-.footer-line {
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.6;
-  letter-spacing: 0.2px;
-  font-family: var(--body);
-}
-.footer-brand {
-  color: var(--text-primary);
-  font-size: 11px;
-  margin-bottom: 6px;
-}
-.footer-block {
-  display: grid;
-  gap: 6px;
-  text-align: left;
-}
 
 .paste-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 .section-header { background: var(--bg-deep); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
@@ -323,7 +283,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="station-wrap">
     <span class="station-label">Selling At</span>
     <select id="station-select">
-      <option value="" disabled selected>â€” Select Station â€”</option>
+      <option value="" disabled selected>- Select Station -</option>
       <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
       <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
       <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
@@ -336,7 +296,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="buyfrom-wrap">
     <span class="buyfrom-label">Bought From <span style="font-size:8px;opacity:0.5;font-family:var(--body);letter-spacing:0">(optional)</span></span>
     <select id="buyfrom-select">
-      <option value="">â€” None â€”</option>
+      <option value="">- None -</option>
       <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
       <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
       <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
@@ -346,9 +306,9 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </select>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">â†º Reset</button>
-    <button class="btn btn-ghost" id="settings-toggle">âš™ Settings</button>
-    <button class="btn btn-primary" id="fetch-btn" disabled>â–¶ Fetch Prices</button>
+    <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">Reset</button>
+    <button class="btn btn-ghost" id="settings-toggle">Settings</button>
+    <button class="btn btn-primary" id="fetch-btn" disabled>Fetch Prices</button>
   </div>
 </header>
 
@@ -420,7 +380,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </div>
     <div class="paste-actions">
       <div class="item-count" id="item-count">Paste export to begin</div>
-      <button class="btn btn-ghost" id="clear-btn">âœ• Clear</button>
+      <button class="btn btn-ghost" id="clear-btn">Clear</button>
     </div>
   </div>
 
@@ -459,23 +419,23 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     <div class="section-header" style="gap:16px;">
       <div class="section-title">Calculated Prices</div>
       <div class="results-stats" id="results-stats"></div>
-      <button class="btn btn-ghost" id="refresh-btn" style="margin-left:auto">â†º Re-fetch</button>
+      <button class="btn btn-ghost" id="refresh-btn" style="margin-left:auto">Re-fetch</button>
     </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">â†•</span></th>
-            <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">â†•</span></th>
-            <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">â†•</span></th>
-            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is â€” older orders may be ghost listings">Age <span class="sort-arrow">â†•</span></th>
-            <th data-col="second" style="text-align:right" title="The second cheapest sell order â€” the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">â†•</span></th>
-            <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">â†•</span></th>
-            <th data-col="buy" style="text-align:right" title="The best buy order at this station â€” your hard price floor">Highest Buy <span class="sort-arrow">â†•</span></th>
-            <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">â†•</span></th>
-            <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">â†•</span></th>
+            <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">^v</span></th>
+            <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">^v</span></th>
+            <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">^v</span></th>
+            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is â€” older orders may be ghost listings">Age <span class="sort-arrow">^v</span></th>
+            <th data-col="second" style="text-align:right" title="The second cheapest sell order â€” the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">^v</span></th>
+            <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">^v</span></th>
+            <th data-col="buy" style="text-align:right" title="The best buy order at this station â€” your hard price floor">Highest Buy <span class="sort-arrow">^v</span></th>
+            <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">^v</span></th>
+            <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">^v</span></th>
             <th data-col="override" style="text-align:center" title="Enter a custom price to override the calculated one for this item">Override</th>
-            <th data-col="flags" style="text-align:center" title="Market condition warnings â€” hover each flag for details">Flags <span class="sort-arrow">â†•</span></th>
+            <th data-col="flags" style="text-align:center" title="Market condition warnings â€” hover each flag for details">Flags <span class="sort-arrow">^v</span></th>
           </tr>
         </thead>
         <tbody id="results-tbody"></tbody>
@@ -498,31 +458,21 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     <div class="copy-output" id="copy-output"></div>
     <div class="copy-actions">
       <span class="copy-info" id="copy-info"></span>
-      <button class="btn btn-success" id="copy-btn">âŽ˜ Copy All</button>
+      <button class="btn btn-success" id="copy-btn">Copy All</button>
     </div>
   </div>
 
 </div>
 
-<div class="toast" id="toast">âœ“ Copied to clipboard!</div>
-
-
-<div class="support-strip">
-  <div class="support-card">
-    <div class="support-title">Support the Project</div>
-    <div class="support-copy">New Eden Trade Lab is a community project built for capsuleers. If these tools help you make better trades or run your industry, feel free to support the project with an ISK donation.</div>
-    <div class="support-copy" style="margin-top:8px">Send ISK to:</div>
-    <div class="support-copy"><strong>Corporation: [CORP NAME HERE]</strong></div>
-    <div class="support-copy" style="margin-top:8px">Donations help support development and future tools but are completely optional.</div>
-  </div>
-</div>
+<div class="toast" id="toast">Copied to clipboard!</div>
 
 <footer>
   <div class="footer-block">
     <div class="footer-brand">New Eden Trade Lab</div>
-    <div class="footer-line">Independent EVE Online trade and industry tools.</div>
+    <div class="footer-line">Independent EVE Online trade tools.</div>
     <div class="footer-line">This website is not affiliated with or endorsed by CCP hf.</div>
     <div class="footer-line">EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide. All other trademarks are the property of their respective owners.</div>
+    <div class="footer-line">Optional ISK donations: Corporation Blue Stream Trading.</div>
     <div class="footer-line">© 2026 New Eden Trade Lab</div>
   </div>
 </footer>
@@ -1002,5 +952,7 @@ document.querySelectorAll('th[data-col]').forEach(th => {
 </script>
 </body>
 </html>
+
+
 
 
