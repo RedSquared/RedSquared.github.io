@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EVE Multi Sell Pricer</title>
+<title>New Eden Trade Lab - Multi Sell Pricer</title>
+<meta name="description" content="Independent EVE Online trade and industry tools for market analysis, planning, and decision-making in New Eden.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -117,6 +118,46 @@ footer {
 }
 footer a { color: var(--text-dim); text-decoration: none; }
 footer a:hover { color: var(--text-secondary); }
+.support-strip {
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+.support-card,
+.footer-block {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 18px;
+}
+.support-title,
+.footer-brand {
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+.support-title {
+  color: var(--gold);
+  font-size: 10px;
+  margin-bottom: 8px;
+}
+.support-copy,
+.footer-line {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+  font-family: var(--body);
+}
+.footer-brand {
+  color: var(--text-primary);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.footer-block {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
 
 .paste-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 .section-header { background: var(--bg-deep); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
@@ -258,7 +299,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 <body>
 
 <!-- ============================================================
-  HEADER BAR (sticky — always visible at the top of the page)
+  HEADER BAR (sticky â€” always visible at the top of the page)
   Contains:
     - Logo / branding on the left
     - "Selling At" dropdown: which station you're listing items at
@@ -274,16 +315,15 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="logo">
     <a href="index.html" class="logo-icon" title="Back to tools"></a>
     <div>
-      <div class="logo-text">Multi Sell</div>
-      <span class="logo-sub">Pricing Terminal</span>
-      <span class="logo-sub" style="font-size:8px;letter-spacing:1.5px;color:var(--gold-dim);margin-top:1px">by RedSquared · Claude AI</span>
+      <div class="logo-text">New Eden Trade Lab</div>
+      <span class="logo-sub">Multi Sell Pricer</span>
     </div>
   </div>
   <div class="sep"></div>
   <div class="station-wrap">
     <span class="station-label">Selling At</span>
     <select id="station-select">
-      <option value="" disabled selected>— Select Station —</option>
+      <option value="" disabled selected>â€” Select Station â€”</option>
       <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
       <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
       <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
@@ -296,7 +336,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="buyfrom-wrap">
     <span class="buyfrom-label">Bought From <span style="font-size:8px;opacity:0.5;font-family:var(--body);letter-spacing:0">(optional)</span></span>
     <select id="buyfrom-select">
-      <option value="">— None —</option>
+      <option value="">â€” None â€”</option>
       <option value="60003760" data-region="10000002" data-short="Jita">Jita IV - Moon 4 - Caldari Navy Assembly Plant</option>
       <option value="60008494" data-region="10000043" data-short="Amarr">Amarr VIII (Oris) - Emperor Family Academy</option>
       <option value="60011866" data-region="10000032" data-short="Dodixie">Dodixie IX - Moon 20 - Federation Navy Assembly Plant</option>
@@ -306,20 +346,20 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     </select>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">↺ Reset</button>
-    <button class="btn btn-ghost" id="settings-toggle">⚙ Settings</button>
-    <button class="btn btn-primary" id="fetch-btn" disabled>▶ Fetch Prices</button>
+    <button class="btn btn-ghost" id="reset-btn" title="Reset everything to default state">â†º Reset</button>
+    <button class="btn btn-ghost" id="settings-toggle">âš™ Settings</button>
+    <button class="btn btn-primary" id="fetch-btn" disabled>â–¶ Fetch Prices</button>
   </div>
 </header>
 
 <!-- ============================================================
-  SETTINGS BAR (hidden by default, slides open when you click ⚙)
+  SETTINGS BAR (hidden by default, slides open when you click âš™)
   Four tuning knobs that affect how prices are calculated:
     - Undercut Ticks: how aggressively to undercut the lowest seller
     - Markup %: how much to add when falling back to Jita/Amarr
     - Gap Threshold %: when to warn about a suspicious price gap
     - Buy Floor Buffer: safety margin above the highest buy order
-  You don't need to touch these — the defaults work well for most
+  You don't need to touch these â€” the defaults work well for most
   general trading. They're here for fine-tuning.
 ============================================================ -->
 <div class="settings-bar" id="settings-bar">
@@ -338,13 +378,13 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="setting-item">
     <span class="setting-label">Gap Threshold %</span>
     <input type="number" id="setting-threshold" value="7.5" min="0.1" max="100" step="0.1">
-    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this percentage of the lowest sell price — but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
+    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this percentage of the lowest sell price â€” but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
   </div>
   <div class="sep" style="height:28px;"></div>
   <div class="setting-item">
     <span class="setting-label">Buy Floor Buffer %</span>
     <input type="number" id="setting-buy-buffer" value="3" min="0" max="50" step="1">
-    <span class="setting-hint" title="Hard floor: your price will never drop below (highest buy order × (1 + buffer%)). Prevents accidentally fulfilling a buy order.">?</span>
+    <span class="setting-hint" title="Hard floor: your price will never drop below (highest buy order Ã— (1 + buffer%)). Prevents accidentally fulfilling a buy order.">?</span>
   </div>
 </div>
 
@@ -364,23 +404,23 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
       <div class="section-title">EVE Multi Sell Export</div>
     </div>
     <div class="paste-area">
-      <textarea id="paste-input" placeholder="Paste your EVE Multi Sell export here...&#10;&#10;In EVE: Select items → Right-click → Sell Items → Export button → paste here."></textarea>
+      <textarea id="paste-input" placeholder="Paste your EVE Multi Sell export here...&#10;&#10;In EVE: Select items â†’ Right-click â†’ Sell Items â†’ Export button â†’ paste here."></textarea>
       <div class="paste-hint">
         <h4>How to export</h4>
         <ol>
           <li>Select items to sell in EVE</li>
-          <li>Right-click → <em>Sell Items (n)</em></li>
+          <li>Right-click â†’ <em>Sell Items (n)</em></li>
           <li>Click <strong>Export</strong> in the sell window</li>
           <li>Paste the result here</li>
           <li>Select your station above</li>
           <li>Click <strong>Fetch Prices</strong></li>
-          <li>Copy output → <em>Import Prices…</em> in EVE</li>
+          <li>Copy output â†’ <em>Import Pricesâ€¦</em> in EVE</li>
         </ol>
       </div>
     </div>
     <div class="paste-actions">
       <div class="item-count" id="item-count">Paste export to begin</div>
-      <button class="btn btn-ghost" id="clear-btn">✕ Clear</button>
+      <button class="btn btn-ghost" id="clear-btn">âœ• Clear</button>
     </div>
   </div>
 
@@ -398,18 +438,18 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 
   <!-- ============================================================
     RESULTS TABLE
-    The main output — one row per item. Columns from left to right:
-      Item Name     — links to EVE Tycoon for more market detail
-      Qty           — how many you're selling
-      Lowest Sell   — cheapest current listing at your station
-      Age           — how old that listing is (stale = may be fake)
-      2nd Lowest    — next cheapest; useful for spotting gap opportunities
-      Age           — age of the 2nd listing
-      Highest Buy   — best buy order (your price floor)
-      Your Price    — recommended sell price (auto-calculated)
-      Total ISK     — Your Price × Qty
-      Override      — type here to set a custom price for that item
-      Flags         — colour-coded warnings; hover each one for details
+    The main output â€” one row per item. Columns from left to right:
+      Item Name     â€” links to EVE Tycoon for more market detail
+      Qty           â€” how many you're selling
+      Lowest Sell   â€” cheapest current listing at your station
+      Age           â€” how old that listing is (stale = may be fake)
+      2nd Lowest    â€” next cheapest; useful for spotting gap opportunities
+      Age           â€” age of the 2nd listing
+      Highest Buy   â€” best buy order (your price floor)
+      Your Price    â€” recommended sell price (auto-calculated)
+      Total ISK     â€” Your Price Ã— Qty
+      Override      â€” type here to set a custom price for that item
+      Flags         â€” colour-coded warnings; hover each one for details
 
     Rows appear immediately as skeletons (grey shimmer) and fill in
     one at a time as each item's market data comes back.
@@ -419,23 +459,23 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
     <div class="section-header" style="gap:16px;">
       <div class="section-title">Calculated Prices</div>
       <div class="results-stats" id="results-stats"></div>
-      <button class="btn btn-ghost" id="refresh-btn" style="margin-left:auto">↺ Re-fetch</button>
+      <button class="btn btn-ghost" id="refresh-btn" style="margin-left:auto">â†º Re-fetch</button>
     </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">↕</span></th>
-            <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">↕</span></th>
-            <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">↕</span></th>
-            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is — older orders may be ghost listings">Age <span class="sort-arrow">↕</span></th>
-            <th data-col="second" style="text-align:right" title="The second cheapest sell order — the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">↕</span></th>
-            <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">↕</span></th>
-            <th data-col="buy" style="text-align:right" title="The best buy order at this station — your hard price floor">Highest Buy <span class="sort-arrow">↕</span></th>
-            <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">↕</span></th>
-            <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">↕</span></th>
+            <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">â†•</span></th>
+            <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">â†•</span></th>
+            <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">â†•</span></th>
+            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is â€” older orders may be ghost listings">Age <span class="sort-arrow">â†•</span></th>
+            <th data-col="second" style="text-align:right" title="The second cheapest sell order â€” the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">â†•</span></th>
+            <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">â†•</span></th>
+            <th data-col="buy" style="text-align:right" title="The best buy order at this station â€” your hard price floor">Highest Buy <span class="sort-arrow">â†•</span></th>
+            <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">â†•</span></th>
+            <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">â†•</span></th>
             <th data-col="override" style="text-align:center" title="Enter a custom price to override the calculated one for this item">Override</th>
-            <th data-col="flags" style="text-align:center" title="Market condition warnings — hover each flag for details">Flags <span class="sort-arrow">↕</span></th>
+            <th data-col="flags" style="text-align:center" title="Market condition warnings â€” hover each flag for details">Flags <span class="sort-arrow">â†•</span></th>
           </tr>
         </thead>
         <tbody id="results-tbody"></tbody>
@@ -445,7 +485,7 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
 
   <!-- ============================================================
     COPY PANEL (appears after prices are fetched)
-    Shows the final formatted output — one line per item in the
+    Shows the final formatted output â€” one line per item in the
     "Name [tab] Price" format that EVE's Import Prices window expects.
     Items with no price data are skipped and counted separately.
     "Copy All" sends the whole block to your clipboard so you can
@@ -453,46 +493,62 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   ============================================================ -->
   <div class="copy-panel" id="copy-panel">
     <div class="section-header">
-      <div class="section-title">EVE Import — Ready to Paste</div>
+      <div class="section-title">EVE Import â€” Ready to Paste</div>
     </div>
     <div class="copy-output" id="copy-output"></div>
     <div class="copy-actions">
       <span class="copy-info" id="copy-info"></span>
-      <button class="btn btn-success" id="copy-btn">⎘ Copy All</button>
+      <button class="btn btn-success" id="copy-btn">âŽ˜ Copy All</button>
     </div>
   </div>
 
 </div>
 
-<div class="toast" id="toast">✓ Copied to clipboard!</div>
+<div class="toast" id="toast">âœ“ Copied to clipboard!</div>
+
+
+<div class="support-strip">
+  <div class="support-card">
+    <div class="support-title">Support the Project</div>
+    <div class="support-copy">New Eden Trade Lab is a community project built for capsuleers. If these tools help you make better trades or run your industry, feel free to support the project with an ISK donation.</div>
+    <div class="support-copy" style="margin-top:8px">Send ISK to:</div>
+    <div class="support-copy"><strong>Corporation: [CORP NAME HERE]</strong></div>
+    <div class="support-copy" style="margin-top:8px">Donations help support development and future tools but are completely optional.</div>
+  </div>
+</div>
 
 <footer>
-  built by <a href="https://github.com/RedSquared" target="_blank" rel="noopener">RedSquared</a>
-  &nbsp;·&nbsp; powered by Claude AI
+  <div class="footer-block">
+    <div class="footer-brand">New Eden Trade Lab</div>
+    <div class="footer-line">Independent EVE Online trade and industry tools.</div>
+    <div class="footer-line">This website is not affiliated with or endorsed by CCP hf.</div>
+    <div class="footer-line">EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide. All other trademarks are the property of their respective owners.</div>
+    <div class="footer-line">© 2026 New Eden Trade Lab</div>
+  </div>
 </footer>
 
 <!-- ============================================================
-  JAVASCRIPT — all the logic that makes the page work.
+  JAVASCRIPT â€” all the logic that makes the page work.
   Sections (in order):
-    Constants       — API URL, station IDs used for fallback pricing
-    State           — variables that track what's currently loaded
-    getSettings()   — reads the values from the Settings bar
-    getSelectedStation() / getBuyFromStation() — reads the dropdowns
-    PARSE           — turns the raw pasted EVE export text into a list
+    Constants       â€” API URL, station IDs used for fallback pricing
+    State           â€” variables that track what's currently loaded
+    getSettings()   â€” reads the values from the Settings bar
+    getSelectedStation() / getBuyFromStation() â€” reads the dropdowns
+    PARSE           â€” turns the raw pasted EVE export text into a list
                       of { typeId, name, quantity } objects
-    DATE HELPERS    — calculates and formats how old a market order is
-    MATH            — calculates the "tick size" (minimum price step)
+    DATE HELPERS    â€” calculates and formats how old a market order is
+    MATH            â€” calculates the "tick size" (minimum price step)
                       and formats ISK numbers for display
-    ESI             — talks to the EVE market API to fetch order data
-    MAIN FETCH      — orchestrates the full price lookup for all items:
+    ESI             â€” talks to the EVE market API to fetch order data
+    MAIN FETCH      â€” orchestrates the full price lookup for all items:
                         1. pulls market orders for the target station
                         2. applies undercut logic to get "Your Price"
                         3. enforces the buy-order floor
                         4. optionally checks the "Bought From" station
                         5. checks for suspicious price gaps
-    RENDER          — builds the HTML for table rows, flags, stats bar,
+    RENDER          â€” builds the HTML for table rows, flags, stats bar,
                       and the copy panel output
-    EVENTS          — wires up all the buttons and dropdowns so clicks
+    EVENTS          â€” wires up all the buttons and dropdowns so clicks
                       and input changes actually do something
 ============================================================ -->
 <script>
@@ -537,7 +593,7 @@ function flagSeverity(r) {
   return 0;
 }
 
-// ── PARSE ──────────────────────────────────────────────
+// â”€â”€ PARSE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parseEveExport(text) {
   const items = [];
   for (const line of text.trim().split('\n')) {
@@ -552,7 +608,7 @@ function parseEveExport(text) {
   return items;
 }
 
-// ── DATE HELPERS ───────────────────────────────────────
+// â”€â”€ DATE HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function orderAgeDays(issuedStr) {
   if (!issuedStr) return null;
   return (Date.now() - new Date(issuedStr).getTime()) / 86400000;
@@ -566,32 +622,32 @@ function formatAge(days) {
 }
 
 function ageBadge(days) {
-  if (days === null) return '<span class="td-num" style="color:var(--text-dim)">—</span>';
+  if (days === null) return '<span class="td-num" style="color:var(--text-dim)">â€”</span>';
   const label = formatAge(days);
   const cls = days > 30 ? 'age-stale' : days > 7 ? 'age-mid' : 'age-fresh';
   return `<span class="age-badge ${cls}">${label}</span>`;
 }
 
-// ── MATH ───────────────────────────────────────────────
+// â”€â”€ MATH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getTickSize(price) {
   if (!price || price <= 0) return 1;
   return Math.pow(10, Math.max(0, Math.floor(Math.log10(price)) - 3));
 }
 
 function formatISK(val) {
-  if (val == null || isNaN(val)) return '—';
+  if (val == null || isNaN(val)) return 'â€”';
   return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatISKCompact(val) {
-  if (val == null || isNaN(val)) return '—';
+  if (val == null || isNaN(val)) return 'â€”';
   if (val >= 1e9) return (val / 1e9).toFixed(2) + 'B';
   if (val >= 1e6) return (val / 1e6).toFixed(2) + 'M';
   if (val >= 1e3) return (val / 1e3).toFixed(2) + 'K';
   return val.toFixed(2);
 }
 
-// ── ESI ────────────────────────────────────────────────
+// â”€â”€ ESI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchOrders(regionId, typeId, orderType = 'sell') {
   try {
     let all = [], page = 1;
@@ -636,7 +692,7 @@ async function getFallbackPrice(typeId, excludeStationId) {
   return { price: null, source: null };
 }
 
-// ── MAIN FETCH ─────────────────────────────────────────
+// â”€â”€ MAIN FETCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchAllPrices() {
   const station  = getSelectedStation();
   const settings = getSettings();
@@ -696,17 +752,17 @@ async function fetchAllPrices() {
         ? Math.max(0.01, priceSource - settings.undercutTicks * tick)
         : null;
 
-      // ── HARD BUY ORDER FLOOR ─────────────────────────
+      // â”€â”€ HARD BUY ORDER FLOOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Prevents the "oops I sold into a buy order" scenario.
-      // Price is clamped above (highestBuy × (1 + buffer)).
+      // Price is clamped above (highestBuy Ã— (1 + buffer)).
       if (newPrice !== null && mkt.highestBuy !== null) {
         const floor = mkt.highestBuy * (1 + settings.buyBuffer);
         if (newPrice <= mkt.highestBuy) {
-          // Would fill the buy order outright — hard clamp + loud warning
+          // Would fill the buy order outright â€” hard clamp + loud warning
           newPrice = floor + tick;
           result.flags.push({ type: 'err', text: 'Fills Buy Order', tooltip: 'Your calculated price is at or below the highest buy order. It has been raised above the buy floor to prevent accidentally selling into a buy order.' });
         } else if (newPrice < floor) {
-          // Within the buffer zone — softer warning, still clamp
+          // Within the buffer zone â€” softer warning, still clamp
           newPrice = floor + tick;
           result.flags.push({ type: 'warn', text: 'Near Buy Order', tooltip: 'Your price is within the buy floor buffer zone and has been nudged up. Check the Highest Buy column and adjust if needed.' });
         }
@@ -720,7 +776,7 @@ async function fetchAllPrices() {
       result.newPrice           = newPrice;
       result.source             = sourceLabel;
 
-      // ── BUY FROM CHECK ───────────────────────────────
+      // â”€â”€ BUY FROM CHECK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // If user specified where they bought from, fetch that
       // station's current lowest sell price. If our sell price
       // is below it, they'd make more just selling back at source.
@@ -733,7 +789,7 @@ async function fetchAllPrices() {
         }
       }
 
-      // ── GAP WARNING (age-aware) ───────────────────────
+      // â”€â”€ GAP WARNING (age-aware) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Only flag if the 2nd lowest is fresh (< 7 days).
       // A 30-day-old ghost listing isn't real competition.
       if (mkt.lowestSell && mkt.secondLowest) {
@@ -761,13 +817,13 @@ async function fetchAllPrices() {
   renderCopyPanel();
 }
 
-// ── RENDER ─────────────────────────────────────────────
+// â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function flagHtml(flags) {
-  if (!flags.length) return '<span class="flag flag-ok" title="No issues detected">✓ Clear</span>';
+  if (!flags.length) return '<span class="flag flag-ok" title="No issues detected">âœ“ Clear</span>';
   return flags.map(f =>
     `<span class="flag flag-${f.type}"${f.tooltip ? ` title="${escHtml(f.tooltip)}"` : ''}>${f.text}</span>`
   ).join(' ');
@@ -790,13 +846,13 @@ function updateRow(i, result) {
   row.innerHTML = `
     <td class="td-name" title="${escHtml(result.name)}"><a href="https://evetycoon.com/market/${result.typeId}" target="_blank" rel="noopener">${escHtml(result.name)}</a></td>
     <td class="td-num">${result.qty.toLocaleString()}</td>
-    <td class="td-low">${result.lowestSell !== null ? formatISK(result.lowestSell) : '—'}</td>
+    <td class="td-low">${result.lowestSell !== null ? formatISK(result.lowestSell) : 'â€”'}</td>
     <td class="td-center">${ageBadge(result.lowestSellAgeDays)}</td>
-    <td class="td-num">${result.secondLowest !== null ? formatISK(result.secondLowest) : '—'}</td>
+    <td class="td-num">${result.secondLowest !== null ? formatISK(result.secondLowest) : 'â€”'}</td>
     <td class="td-center">${ageBadge(result.secondLowestAgeDays)}</td>
-    <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : '—'}</td>
-    <td class="td-price">${price !== null ? formatISK(price) : '—'}</td>
-    <td class="td-isk">${total !== null ? formatISK(total) : '—'}</td>
+    <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : 'â€”'}</td>
+    <td class="td-price">${price !== null ? formatISK(price) : 'â€”'}</td>
+    <td class="td-isk">${total !== null ? formatISK(total) : 'â€”'}</td>
     <td class="td-center">
       <input class="override-input" data-idx="${i}" placeholder="override..."
              value="${result.override !== null ? result.override : ''}">
@@ -813,8 +869,8 @@ function onOverrideChange(e) {
   const price = effectivePrice(results[idx]);
   const total = price !== null ? price * results[idx].qty : null;
   const row   = document.getElementById(`row-${idx}`);
-  row.cells[7].textContent = price !== null ? formatISK(price) : '—';
-  row.cells[8].textContent = total !== null ? formatISK(total) : '—';
+  row.cells[7].textContent = price !== null ? formatISK(price) : 'â€”';
+  row.cells[8].textContent = total !== null ? formatISK(total) : 'â€”';
   renderStats();
   renderCopyPanel();
 }
@@ -843,11 +899,11 @@ function renderCopyPanel() {
   const skipped = results.filter(r => effectivePrice(r) === null).length;
   document.getElementById('copy-output').textContent = buildCopyText();
   document.getElementById('copy-info').textContent =
-    `${results.length - skipped} items ready${skipped ? ` · ${skipped} skipped (no data)` : ''}`;
+    `${results.length - skipped} items ready${skipped ? ` Â· ${skipped} skipped (no data)` : ''}`;
   document.getElementById('copy-panel').classList.add('visible');
 }
 
-// ── EVENTS ─────────────────────────────────────────────
+// â”€â”€ EVENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.getElementById('paste-input').addEventListener('input', function() {
   const text = this.value.trim();
   parsedItems = text ? parseEveExport(text) : [];
@@ -856,7 +912,7 @@ document.getElementById('paste-input').addEventListener('input', function() {
     ? 'Paste export to begin'
     : count > 0
       ? `<span>${count}</span> item${count !== 1 ? 's' : ''} parsed`
-      : 'No valid items found — check format';
+      : 'No valid items found â€” check format';
   updateFetchBtn();
 });
 
@@ -922,7 +978,7 @@ document.querySelectorAll('th[data-col]').forEach(th => {
     if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
     document.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
     th.classList.add('sorted');
-    th.querySelector('.sort-arrow').textContent = sortDir === 1 ? '↑' : '↓';
+    th.querySelector('.sort-arrow').textContent = sortDir === 1 ? 'â†‘' : 'â†“';
     const colMap = {
       name: r => r.name, qty: r => r.qty,
       lowest: r => r.lowestSell ?? -Infinity,
@@ -946,3 +1002,5 @@ document.querySelectorAll('th[data-col]').forEach(th => {
 </script>
 </body>
 </html>
+
+
