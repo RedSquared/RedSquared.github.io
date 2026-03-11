@@ -301,11 +301,42 @@
     .loc-cell:hover { color: var(--blue); text-decoration: underline; }
     .expiry-ok   { color: var(--text2); }
     .expiry-warn { color: var(--orange); }
-    .expiry-crit { color: var(--red); }
-    .copy-btn    { background: transparent; border: 1px solid var(--border); border-radius: 4px;
-                   color: var(--text2); font-size: 14px; cursor: pointer; padding: 1px 5px;
-                   line-height: 1.4; transition: color .15s, border-color .15s; }
-    .copy-btn:hover  { color: var(--gold); border-color: var(--gold); }
+    .expiry-crit { color: var(--red); }    .copy-btn {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 0;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .copy-btn::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      width: 9px;
+      height: 10px;
+      border: 1.5px solid currentColor;
+      border-radius: 2px;
+      background: transparent;
+    }
+    .copy-btn::after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 3px;
+      width: 5px;
+      height: 3px;
+      border: 1.5px solid currentColor;
+      border-bottom: 0;
+      border-radius: 2px 2px 0 0;
+      background: var(--bg2);
+    }
+    .copy-btn:hover  { color: var(--gold); border-color: var(--gold); background: rgba(240,180,41,.06); }
     .copy-btn-ok     { color: var(--green) !important; border-color: var(--green) !important; }
     .copy-btn-warn   { color: var(--gold)  !important; border-color: var(--gold)  !important; }
 
@@ -2782,6 +2813,8 @@ init();
 
 </body>
 </html>
+
+
 
 
 
