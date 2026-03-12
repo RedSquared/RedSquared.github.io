@@ -54,7 +54,7 @@
     header {
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
-      padding: 0 20px;
+      padding: 0 24px;
       height: 60px;
       display: flex;
       align-items: center;
@@ -71,7 +71,7 @@
     a.logo-icon:hover { border-color: #ff6b5a; }
     a.logo-icon:hover::after { background: #ff6b5a; }
     .logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
-    .logo-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
+    .logo-sub { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
     .char-info { display: flex; align-items: center; gap: 10px; }
     .char-info img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); }
     .char-name { font-weight: 600; }
@@ -301,42 +301,25 @@
     .loc-cell:hover { color: var(--blue); text-decoration: underline; }
     .expiry-ok   { color: var(--text2); }
     .expiry-warn { color: var(--orange); }
-    .expiry-crit { color: var(--red); }    .copy-btn {
-      position: relative;
-      width: 22px;
-      height: 22px;
+    .expiry-crit { color: var(--red); }
+    .copy-btn {
+      width: 24px;
+      height: 24px;
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 4px;
       color: var(--text2);
       cursor: pointer;
       padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--body);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1;
       transition: color .15s, border-color .15s, background .15s;
     }
-    .copy-btn::before {
-      content: '';
-      position: absolute;
-      left: 6px;
-      top: 6px;
-      width: 9px;
-      height: 10px;
-      border: 1.5px solid currentColor;
-      border-radius: 2px;
-      background: transparent;
-    }
-    .copy-btn::after {
-      content: '';
-      position: absolute;
-      left: 8px;
-      top: 3px;
-      width: 5px;
-      height: 3px;
-      border: 1.5px solid currentColor;
-      border-bottom: 0;
-      border-radius: 2px 2px 0 0;
-      background: var(--bg2);
-    }
-    .copy-btn:hover  { color: var(--gold); border-color: var(--gold); background: rgba(240,180,41,.06); }
     .copy-btn-ok     { color: var(--green) !important; border-color: var(--green) !important; }
     .copy-btn-warn   { color: var(--gold)  !important; border-color: var(--gold)  !important; }
 
@@ -832,32 +815,32 @@
       <ul>
         <li><strong>Wallets</strong> - Personal and corp wallet balances are available in the dashboard widgets, including corp division selection.</li>
         <li><strong>Stats Bar</strong> - At-a-glance numbers: free order slots, undercut status, corp order counts (if you have role access), sell/buy values, top items, and <em>Oldest Active</em>.</li>
-        <li><strong>Station Breakdown</strong> â€” Your orders grouped by station with sell/buy counts and undercut flags. Click the header to collapse.</li>
+        <li><strong>Station Breakdown</strong> - Your orders grouped by station with sell/buy counts and undercut flags. Click the header to collapse.</li>
         <li><strong>Market Orders Table</strong> - Every active order with full detail, including owner, <em>Order Age</em>, and expiry. Click any station row above to filter the table to that station.</li>
       </ul>
 
       <h3>Filters</h3>
       <ul>
-        <li><strong>All Types / Sell / Buy</strong> â€” Show only sell orders, only buy orders, or both.</li>
-        <li><strong>All Sources / Personal / Corp</strong> â€” Switch between your personal orders and corp orders. Corp requires the Accountant or Market Manager role in your corporation.</li>
-        <li><strong>All Status / Best Price / Undercut / Dupes</strong> â€” Filter by undercut status. <em>Dupes</em> shows items where you have more than one order at the same station.</li>
+        <li><strong>All Types / Sell / Buy</strong> - Show only sell orders, only buy orders, or both.</li>
+        <li><strong>All Sources / Personal / Corp</strong> - Switch between your personal orders and corp orders. Corp requires the Accountant or Market Manager role in your corporation.</li>
+        <li><strong>All Status / Best Price / Undercut / Dupes</strong> - Filter by undercut status. <em>Dupes</em> shows items where you have more than one order at the same station.</li>
         <li><strong>Owner filter</strong> - Includes <em>All Owners</em>, <em>Active Character</em>, and specific owner names.</li>
-        <li><strong>Location chip</strong> â€” Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the âœ• on the chip to clear.</li>
+        <li><strong>Location chip</strong> - Appears when you click a station in the Station Breakdown. Shows orders only at that station. Click the x on the chip to clear.</li>
         <li><strong>Search</strong> - The search field filters item names using case-insensitive contains matching.</li>
         <li><strong>Reset</strong> - Clears type/source/status/owner/search filters and active location chip.</li>
-        <li><strong>Missing Sell Pace?</strong> â€” Open âš™ Settings and check the <em>Sell Pace</em> box under Columns.</li>
+        <li><strong>Missing Sell Pace?</strong> - Open Settings and check the <em>Sell Pace</em> box under Columns.</li>
       </ul>
 
       <h3>Undercut Detection</h3>
       <p>After orders load, the app fetches live market data in the background and flags any order where a competitor has a better price.</p>
       <ul>
-        <li><strong>Station scope</strong> â€” Compares only against orders at the exact same station. Best for station traders.</li>
-        <li><strong>Region scope</strong> â€” Compares against the best price anywhere in the region. Best for regional traders.</li>
-        <li><strong>Ticks</strong> â€” EVE prices move in 0.01 ISK increments called ticks. Set how many ticks below the current best price the copy button will suggest. Default is 2 ticks.</li>
+        <li><strong>Station scope</strong> - Compares only against orders at the exact same station. Best for station traders.</li>
+        <li><strong>Region scope</strong> - Compares against the best price anywhere in the region. Best for regional traders.</li>
+        <li><strong>Ticks</strong> - EVE prices move in 0.01 ISK increments called ticks. Set how many ticks below the current best price the copy button will suggest. Default is 2 ticks.</li>
         <li><strong>Pace Days</strong> - Controls the lookback window for Sell Pace calculations.</li>
       </ul>
 
-      <h3>Copy Button (âŽ˜)</h3>
+      <h3>Copy Button</h3>
       <p>Clicking the copy icon copies the suggested undercut price and attempts to open the item market window in the EVE client. Success/warn states are shown with button color feedback.</p>
 
       <h3>Order Age Tracking</h3>
@@ -875,15 +858,15 @@
       <h3>Multi-Account</h3>
       <p>You can sign in with multiple EVE characters. Use the account switcher in the header to switch the active character or remove an account. Each character's tokens are stored independently.</p>
 
-      <h3>Settings (âš™)</h3>
+      <h3>Settings</h3>
       <p>The settings button in the toolbar opens a popover with:</p>
       <ul>
         <li><strong>Presets</strong> - Save named presets, apply them later, and mark favorites.</li>
-        <li><strong>Scope</strong> â€” Station or Region undercut comparison.</li>
-        <li><strong>Ticks</strong> â€” Price undercut increment.</li>
+        <li><strong>Scope</strong> - Station or Region undercut comparison.</li>
+        <li><strong>Ticks</strong> - Price undercut increment.</li>
         <li><strong>Pace Days</strong> - Controls the lookback window for Sell Pace calculations.</li>
-        <li><strong>Compact</strong> â€” Hides item icons and reduces row height for a denser view.</li>
-        <li><strong>Refresh</strong> â€” Manually reload all orders and re-check market prices.</li>
+        <li><strong>Compact</strong> - Hides item icons and reduces row height for a denser view.</li>
+        <li><strong>Refresh</strong> - Manually reload all orders and re-check market prices.</li>
         <li><strong>Favorite presets bar</strong> - Favorited presets appear as quick chips beside filters in the toolbar.</li>
       </ul>
 
@@ -1902,7 +1885,7 @@ function renderStats() {
   const ucRedPct   = ucTotal > 0 ? Math.round((ucCut  / ucTotal) * 100) : 0;
   const ucGrnPct   = ucTotal > 0 ? Math.round((ucBest / ucTotal) * 100) : 0;
   const ucHtmlStat = ucPending
-    ? `<div class="stat-value" style="font-size:15px;color:var(--text2)"><span class="mini-spin"></span> checkingâ€¦</div>`
+    ? `<div class="stat-value" style="font-size:15px;color:var(--text2)"><span class="mini-spin"></span> checking...</div>`
     : `<div class="stat-value ${ucCut > 0 ? 'red' : 'green'}">${ucCut} <span style="font-size:14px;font-weight:700;color:var(--text)">/ ${ucTotal}</span></div>
        <div class="stat-sub">${ucBest} best - ${ucCut} undercut</div>
        <div class="slot-bar" style="display:flex">
@@ -2159,7 +2142,7 @@ function renderOrders() {
     const copyBtn = (uc && (uc.status === 'undercut' || uc.status === 'best'))
       ? `<button id="copy-btn-${o.order_id}" class="copy-btn"
              title="Copy suggested price &amp; open in-game market window"
-             onclick="copyUndercut(${o.order_id}, ${o.is_buy_order}, ${o.price}, ${o.type_id})"></button>`
+             onclick="copyUndercut(${o.order_id}, ${o.is_buy_order}, ${o.price}, ${o.type_id})">⎘</button>`
       : '';
 
     return `
@@ -2779,7 +2762,7 @@ async function init() {
 
   if (code && state) {
     showView('login');
-    showMsg('<div class="spinner"></div>Authenticatingâ€¦');
+    showMsg('<div class="spinner"></div>Authenticating...');
     try {
       await handleCallback(code, state);
     } catch (e) {

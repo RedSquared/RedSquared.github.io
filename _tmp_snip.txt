@@ -1,0 +1,16 @@
+        <td data-col="item">
+          <div class="item-cell">
+            <img class="item-icon"
+                 src="https://images.evetech.net/types/${o.type_id}/icon?size=32"
+                 alt="" loading="lazy">
+            <a class="item-name" href="https://evetycoon.com/market/${o.type_id}" target="_blank" rel="noopener noreferrer">${escHtml(name)}</a>${srcBadge}
+          </div>
+        </td>
+        <td data-col="type"><span class="badge ${isBuy ? 'badge-buy' : 'badge-sell'}">${isBuy ? 'Buy' : 'Sell'}</span></td>
+        <td data-col="status">${ucHtml}</td>
+        <td data-col="turnover">${turnHtml}</td>
+        <td class="r price" data-col="price">${fmtISK(o.price)}</td>
+        <td class="r" data-col="volume">
+          <span class="vol-text">${fmtNum(o.volume_remain)}<span style="color:var(--text2)"> / </span>${fmtNum(o.volume_total)}</span>
+        </td>
+        <td class="r total" data-col="total">${fmtISK(orderTotal)}</td>
