@@ -58,7 +58,7 @@ a.logo-icon { text-decoration: none; transition: border-color 0.15s; }
 a.logo-icon:hover { border-color: #ff6b5a; }
 a.logo-icon:hover::after { background: #ff6b5a; }
 .logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
-.logo-sub { font-size: 9px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
+.logo-sub { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
 header .sep { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
 .station-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 420px; }
 .station-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: var(--display); flex-shrink: 0; }
@@ -338,13 +338,13 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
   <div class="setting-item">
     <span class="setting-label">Gap Threshold %</span>
     <input type="number" id="setting-threshold" value="7.5" min="0.1" max="100" step="0.1">
-    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this percentage of the lowest sell price â€” but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
+    <span class="setting-hint" title="Gap warning fires when 1st/2nd sell spread exceeds this percentage of the lowest sell price - but only if the 2nd order is under 7 days old. Stale ghost listings are ignored.">?</span>
   </div>
   <div class="sep" style="height:28px;"></div>
   <div class="setting-item">
     <span class="setting-label">Buy Floor Buffer %</span>
     <input type="number" id="setting-buy-buffer" value="3" min="0" max="50" step="1">
-    <span class="setting-hint" title="Hard floor: your price will never drop below (highest buy order Ã— (1 + buffer%)). Prevents accidentally fulfilling a buy order.">?</span>
+    <span class="setting-hint" title="Hard floor: your price will never drop below (highest buy order x (1 + buffer%)). Prevents accidentally fulfilling a buy order.">?</span>
   </div>
 </div>
 
@@ -364,17 +364,17 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
       <div class="section-title">EVE Multi Sell Export</div>
     </div>
     <div class="paste-area">
-      <textarea id="paste-input" placeholder="Paste your EVE Multi Sell export here...&#10;&#10;In EVE: Select items â†’ Right-click â†’ Sell Items â†’ Export button â†’ paste here."></textarea>
+      <textarea id="paste-input" placeholder="Paste your EVE Multi Sell export here...&#10;&#10;In EVE: Select items -> Right-click -> Sell Items -> Export button -> paste here."></textarea>
       <div class="paste-hint">
         <h4>How to export</h4>
         <ol>
           <li>Select items to sell in EVE</li>
-          <li>Right-click â†’ <em>Sell Items (n)</em></li>
+          <li>Right-click -> <em>Sell Items (n)</em></li>
           <li>Click <strong>Export</strong> in the sell window</li>
           <li>Paste the result here</li>
           <li>Select your station above</li>
           <li>Click <strong>Fetch Prices</strong></li>
-          <li>Copy output â†’ <em>Import Pricesâ€¦</em> in EVE</li>
+          <li>Copy output -> <em>Import Prices...</em> in EVE</li>
         </ol>
       </div>
     </div>
@@ -428,14 +428,14 @@ tr.row-danger:hover td { background: rgba(231,76,60,0.10); }
             <th data-col="name" title="Click the item name to view it on EVE Tycoon">Item Name <span class="sort-arrow">^v</span></th>
             <th data-col="qty" style="text-align:right" title="Quantity you are selling">Qty <span class="sort-arrow">^v</span></th>
             <th data-col="lowest" style="text-align:right" title="The cheapest active sell order at this station">Lowest Sell <span class="sort-arrow">^v</span></th>
-            <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is â€” older orders may be ghost listings">Age <span class="sort-arrow">^v</span></th>
-            <th data-col="second" style="text-align:right" title="The second cheapest sell order â€” the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">^v</span></th>
+                        <th data-col="lowestage" style="text-align:center" title="How old the cheapest sell order is - older orders may be ghost listings">Age <span class="sort-arrow">^v</span></th>
+                        <th data-col="second" style="text-align:right" title="The second cheapest sell order - the real market price if the lowest listing is bought out">2nd Lowest <span class="sort-arrow">^v</span></th>
             <th data-col="secondage" style="text-align:center" title="How old the 2nd lowest sell order is">Age <span class="sort-arrow">^v</span></th>
-            <th data-col="buy" style="text-align:right" title="The best buy order at this station â€” your hard price floor">Highest Buy <span class="sort-arrow">^v</span></th>
+                        <th data-col="buy" style="text-align:right" title="The best buy order at this station - your hard price floor">Highest Buy <span class="sort-arrow">^v</span></th>
             <th data-col="newprice" style="text-align:right" title="Recommended sell price: lowest sell minus your undercut ticks setting">Your Price <span class="sort-arrow">^v</span></th>
             <th data-col="totalisk" style="text-align:right" title="Your Price multiplied by quantity">Total ISK <span class="sort-arrow">^v</span></th>
             <th data-col="override" style="text-align:center" title="Enter a custom price to override the calculated one for this item">Override</th>
-            <th data-col="flags" style="text-align:center" title="Market condition warnings â€” hover each flag for details">Flags <span class="sort-arrow">^v</span></th>
+                        <th data-col="flags" style="text-align:center" title="Market condition warnings - hover each flag for details">Flags <span class="sort-arrow">^v</span></th>
           </tr>
         </thead>
         <tbody id="results-tbody"></tbody>
@@ -572,7 +572,7 @@ function formatAge(days) {
 }
 
 function ageBadge(days) {
-  if (days === null) return '<span class="td-num" style="color:var(--text-dim)">â€”</span>';
+  if (days === null) return '<span class="td-num" style="color:var(--text-dim)">-</span>';
   const label = formatAge(days);
   const cls = days > 30 ? 'age-stale' : days > 7 ? 'age-mid' : 'age-fresh';
   return `<span class="age-badge ${cls}">${label}</span>`;
@@ -585,12 +585,12 @@ function getTickSize(price) {
 }
 
 function formatISK(val) {
-  if (val == null || isNaN(val)) return 'â€”';
+  if (val == null || isNaN(val)) return '-';
   return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatISKCompact(val) {
-  if (val == null || isNaN(val)) return 'â€”';
+  if (val == null || isNaN(val)) return '-';
   if (val >= 1e9) return (val / 1e9).toFixed(2) + 'B';
   if (val >= 1e6) return (val / 1e6).toFixed(2) + 'M';
   if (val >= 1e3) return (val / 1e3).toFixed(2) + 'K';
@@ -773,7 +773,7 @@ function escHtml(s) {
 }
 
 function flagHtml(flags) {
-  if (!flags.length) return '<span class="flag flag-ok" title="No issues detected">âœ“ Clear</span>';
+  if (!flags.length) return '<span class="flag flag-ok" title="No issues detected">OK Clear</span>';
   return flags.map(f =>
     `<span class="flag flag-${f.type}"${f.tooltip ? ` title="${escHtml(f.tooltip)}"` : ''}>${f.text}</span>`
   ).join(' ');
@@ -796,13 +796,13 @@ function updateRow(i, result) {
   row.innerHTML = `
     <td class="td-name" title="${escHtml(result.name)}"><a href="https://evetycoon.com/market/${result.typeId}" target="_blank" rel="noopener">${escHtml(result.name)}</a></td>
     <td class="td-num">${result.qty.toLocaleString()}</td>
-    <td class="td-low">${result.lowestSell !== null ? formatISK(result.lowestSell) : 'â€”'}</td>
+    <td class="td-low">${result.lowestSell !== null ? formatISK(result.lowestSell) : '-'}</td>
     <td class="td-center">${ageBadge(result.lowestSellAgeDays)}</td>
-    <td class="td-num">${result.secondLowest !== null ? formatISK(result.secondLowest) : 'â€”'}</td>
+    <td class="td-num">${result.secondLowest !== null ? formatISK(result.secondLowest) : '-'}</td>
     <td class="td-center">${ageBadge(result.secondLowestAgeDays)}</td>
-    <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : 'â€”'}</td>
-    <td class="td-price">${price !== null ? formatISK(price) : 'â€”'}</td>
-    <td class="td-isk">${total !== null ? formatISK(total) : 'â€”'}</td>
+    <td class="td-buy">${result.highestBuy !== null ? formatISK(result.highestBuy) : '-'}</td>
+    <td class="td-price">${price !== null ? formatISK(price) : '-'}</td>
+    <td class="td-isk">${total !== null ? formatISK(total) : '-'}</td>
     <td class="td-center">
       <input class="override-input" data-idx="${i}" placeholder="override..."
              value="${result.override !== null ? result.override : ''}">
@@ -819,8 +819,8 @@ function onOverrideChange(e) {
   const price = effectivePrice(results[idx]);
   const total = price !== null ? price * results[idx].qty : null;
   const row   = document.getElementById(`row-${idx}`);
-  row.cells[7].textContent = price !== null ? formatISK(price) : 'â€”';
-  row.cells[8].textContent = total !== null ? formatISK(total) : 'â€”';
+  row.cells[7].textContent = price !== null ? formatISK(price) : '-';
+  row.cells[8].textContent = total !== null ? formatISK(total) : '-';
   renderStats();
   renderCopyPanel();
 }
@@ -862,7 +862,7 @@ document.getElementById('paste-input').addEventListener('input', function() {
     ? 'Paste export to begin'
     : count > 0
       ? `<span>${count}</span> item${count !== 1 ? 's' : ''} parsed`
-      : 'No valid items found â€” check format';
+      : 'No valid items found - check format';
   updateFetchBtn();
 });
 
@@ -928,7 +928,7 @@ document.querySelectorAll('th[data-col]').forEach(th => {
     if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
     document.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
     th.classList.add('sorted');
-    th.querySelector('.sort-arrow').textContent = sortDir === 1 ? 'â†‘' : 'â†“';
+    th.querySelector('.sort-arrow').textContent = sortDir === 1 ? '^' : 'v';
     const colMap = {
       name: r => r.name, qty: r => r.qty,
       lowest: r => r.lowestSell ?? -Infinity,
@@ -952,6 +952,7 @@ document.querySelectorAll('th[data-col]').forEach(th => {
 </script>
 </body>
 </html>
+
 
 
 
