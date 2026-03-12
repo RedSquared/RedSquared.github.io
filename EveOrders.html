@@ -449,9 +449,16 @@
       background: none;
       border: none;
       color: var(--text2);
-      font-size: 17px;
+      font-family: var(--body);
+      font-size: 16px;
+      font-weight: 700;
       line-height: 1;
-      padding: 0 3px;
+      letter-spacing: 0;
+      text-transform: none;
+      padding: 0 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       border-radius: 3px;
       flex-shrink: 0;
@@ -469,7 +476,6 @@
       transition: background .1s;
     }
     .acct-add:hover { background: var(--bg3); }
-
     /* â”€â”€ Header wallets â”€â”€ */
     #header-wallets {
       display: flex;
@@ -793,8 +799,8 @@
             <th data-col="turnover" onclick="sortBy('turnover')" title="Average units sold per day over configured Pace Days vs units currently ahead of your order"><span id="turnover-col-label">Sell Pace</span> <span id="si-turnover"></span></th>
             <th data-col="price" onclick="sortBy('price')"  class="r" title="Click to sort by unit price">Unit Price  <span id="si-price"></span></th>
             <th data-col="volume" onclick="sortBy('volume')" class="r" title="Click to sort by remaining quantity">Qty         <span id="si-volume"></span></th>
-            <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price Ã— qty)">Order Total <span id="si-total"></span></th>
-            <th data-col="uc_total" onclick="sortBy('uc_total')" class="r" title="Click to sort by undercut value (price difference Ã— qty remaining)">Undercut Total <span id="si-uc_total"></span></th>
+            <th data-col="total" onclick="sortBy('total')"  class="r" title="Click to sort by total order value (price x qty)">Order Total <span id="si-total"></span></th>
+            <th data-col="uc_total" onclick="sortBy('uc_total')" class="r" title="Click to sort by undercut value (price difference x qty remaining)">Undercut Total <span id="si-uc_total"></span></th>
             <th data-col="location" onclick="sortBy('location')" title="Click to sort by station name">      Location   <span id="si-location"></span></th>
             <th data-col="owner" onclick="sortBy('owner')" title="Click to sort by order owner">Owner <span id="si-owner"></span></th>
             <th data-col="age" onclick="sortBy('age')" class="r" title="Click to sort by tracked order age">Order Age <span id="si-age"></span></th>
@@ -1006,8 +1012,9 @@ function setActiveAccount(charId) {
   renderHeaderChar();
   loadOrders();
 }
-
 function removeAccount(charId) {
+
+
   const accounts = getAccounts();
   delete accounts[charId];
   saveAccounts(accounts);
@@ -1860,7 +1867,7 @@ function renderStats() {
     (o.price * o.volume_remain) > (best ? best.price * best.volume_remain : 0) ? o : best, null);
   const topOrderName = topOrder ? (typeNames[topOrder.type_id] || `Type ${topOrder.type_id}`) : 'â€”';
   const topOrderVal  = topOrder ? topOrder.price * topOrder.volume_remain : 0;
-  const topOrderSub  = topOrder ? `${fmtNum(topOrder.volume_remain)} Ã— ${fmtISK(topOrder.price)}` : '';
+  const topOrderSub  = topOrder ? `${fmtNum(topOrder.volume_remain)} x ${fmtISK(topOrder.price)}` : '';
 
   const oldestOrder = scopeAll.reduce((oldest, o) => {
     if (!oldest) return o;
@@ -1897,7 +1904,7 @@ function renderStats() {
   const ucHtmlStat = ucPending
     ? `<div class="stat-value" style="font-size:15px;color:var(--text2)"><span class="mini-spin"></span> checkingâ€¦</div>`
     : `<div class="stat-value ${ucCut > 0 ? 'red' : 'green'}">${ucCut} <span style="font-size:14px;font-weight:700;color:var(--text)">/ ${ucTotal}</span></div>
-       <div class="stat-sub">${ucBest} best Â· ${ucCut} undercut</div>
+       <div class="stat-sub">${ucBest} best - ${ucCut} undercut</div>
        <div class="slot-bar" style="display:flex">
          <div style="height:100%;width:${ucRedPct}%;background:var(--red);transition:width .3s"></div>
          <div style="height:100%;width:${ucGrnPct}%;background:var(--green);transition:width .3s"></div>
@@ -1951,7 +1958,7 @@ function renderStats() {
     <div class="stat-card" title="Total active corp orders visible to your character.">
       <div class="stat-label">Corp Orders${l}</div>
       <div class="stat-value">${corpOrds.length}</div>
-      <div class="stat-sub">${corpSell.length} sell Â· ${corpBuy.length} buy</div>
+      <div class="stat-sub">${corpSell.length} sell - ${corpBuy.length} buy</div>
     </div>` : ''}
     <div class="stat-card" title="How many of your active orders have been undercut by a competitor. Red = undercut, green = all best price.">
       <div class="stat-label">Undercut${l}</div>
@@ -1962,12 +1969,12 @@ function renderStats() {
       <div class="stat-value ${staleCount > 0 ? 'red' : 'green'}">${staleCount}</div>
       <div class="stat-sub">${scopeAll.length} total in scope</div>
     </div>
-    <div class="stat-card" title="Total ISK value of all active sell orders (price Ã— remaining quantity).">
+    <div class="stat-card" title="Total ISK value of all active sell orders (price x remaining quantity).">
       <div class="stat-label">Sell Value${l}</div>
       <div class="stat-value gold">${fmtISK(sellVal)}</div>
       <div class="stat-sub">&nbsp;</div>
     </div>
-    <div class="stat-card" title="Total ISK committed to active buy orders (price Ã— remaining quantity).">
+    <div class="stat-card" title="Total ISK committed to active buy orders (price x remaining quantity).">
       <div class="stat-label">Buy Volume${l}</div>
       <div class="stat-value blue">${fmtISK(buyVal)}</div>
       <div class="stat-sub">&nbsp;</div>
@@ -1984,10 +1991,10 @@ function renderStats() {
       <div class="stat-value gold" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(topItemName)}</div>
       <div class="stat-sub">${fmtISK(topItemVal)} / unit</div>
     </div>
-    <div class="stat-card" title="Your single order with the highest total value (price Ã— remaining qty) across all your orders.">
+    <div class="stat-card" title="Your single order with the highest total value (price x remaining qty) across all your orders.">
       <div class="stat-label">Most Valuable Order${l}</div>
       <div class="stat-value gold" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(topOrderName)}</div>
-      <div class="stat-sub">${fmtISK(topOrderVal)} Â· ${topOrderSub}</div>
+      <div class="stat-sub">${fmtISK(topOrderVal)} - ${topOrderSub}</div>
     </div>
     <div class="stat-card" title="Oldest tracked order in current scope by first seen issued timestamp.">
       <div class="stat-label">Oldest Active${l}</div>
@@ -2245,7 +2252,7 @@ function refreshSortIndicators() {
   cols.forEach(c => {
     const ind = document.getElementById(`si-${c}`);
     const th  = ind?.parentElement;
-    if (ind) ind.textContent = c === sortCol ? (sortDir === 1 ? ' â–²' : ' â–¼') : '';
+    if (ind) ind.textContent = c === sortCol ? (sortDir === 1 ? ' ^' : ' v') : '';
     if (th)  th.classList.toggle('th-sorted', c === sortCol);
   });
 }
@@ -2614,7 +2621,7 @@ function renderHeaderChar() {
         <span class="acct-item-label">${label}</span>
         ${isActive ? '<span class="acct-active-badge">ACTIVE</span>' : ''}
         <button class="acct-remove" title="Remove account"
-                onclick="event.stopPropagation();removeAccount('${escHtml(cid)}')">Ã—</button>
+                onclick="event.stopPropagation();removeAccount('${escHtml(cid)}')">x</button>
       </div>`;
   }).join('');
 
@@ -2813,6 +2820,8 @@ init();
 
 </body>
 </html>
+
+
 
 
 
