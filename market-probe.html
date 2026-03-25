@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Eden Trade Lab | Market Probe</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/market-probe.css">
+  <link rel="stylesheet" href="/assets/css/site-nav.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div id="header">
+  <div class="logo">
+    <a href="/" class="logo-icon" title="Back to New Eden Trade Lab" style="text-decoration:none"></a>
+    <div>
+      <div class="logo-text">New Eden Trade Lab</div>
+      <span class="logo-sub">Market Probe</span>
+      <span class="logo-tag">We don&rsquo;t find wormholes. We find mistakes.</span>
+    </div>
+  </div>
+  <div class="hdr-sep"></div>
+  <button id="scan-btn" onclick="startScan()">Scan Now</button>
+  <button id="stop-btn" onclick="togglePause()">⏸ Pause</button>
+  <div id="status-bar">Ready &mdash; click <strong>Scan Now</strong> to begin</div>
+  <div id="char-pills"></div>
+  <button class="menu-btn" onclick="openMenu()" title="Filters &amp; Characters">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- ── CONTENT ── -->
+<div id="content">
+  <div id="error-bar"></div>
+  <div id="summary-bar">
+    <div class="stat-cell">
+      <span class="stat-lbl">Deals</span>
+      <span id="sum-deals" class="sv"></span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-cell">
+      <span class="stat-lbl">Total Opportunity</span>
+      <span id="sum-total"></span>
+    </div>
+    <div class="stat-flex"></div>
+    <div class="stat-spark-group">
+      <div class="stat-cell">
+        <span class="stat-lbl">Last 20 Scans <button class="spark-reset-btn" onclick="resetSparkline()" title="Clear scan history">✕</button></span>
+        <span id="sum-sparkline">—</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-cell">
+        <span class="stat-lbl">Last Scan</span>
+        <span id="sum-last-val" class="sv">—</span>
+      </div>
+    </div>
+  </div>
+  <div id="table-wrap">
+    <div id="empty-state">
+      <div class="e-icon"></div>
+      <h2>EVE Market Probe</h2>
+      <p>Click <kbd>Scan Now</kbd> to scan Jita, Amarr, and Dodixie simultaneously for one-click mistake sell orders.</p>
+      <p style="font-size:11px;color:var(--dim)">All three regions &bull; Concurrency-limited ESI requests &bull; Auto-rescan every 10 minutes</p>
+    </div>
+    <div class="table-outer" id="table-outer" style="display:none">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th class="th-c">In Game</th>
+            <th onclick="sortBy('region')">Region</th>
+            <th onclick="sortBy('name')">Item Name</th>
+            <th onclick="sortBy('category_name')">Category</th>
+            <th onclick="sortBy('group_name')">Group</th>
+            <th onclick="sortBy('buy_price')"       class="th-r">Buy Price</th>
+            <th onclick="sortBy('isk_req')"         class="th-r">ISK Required</th>
+            <th onclick="sortBy('relist_price')"    class="th-r">Relist Price</th>
+            <th onclick="sortBy('profit_per_unit')" class="th-r">Profit/Unit</th>
+            <th onclick="sortBy('profit_pct')"      class="th-r">Profit %</th>
+            <th onclick="sortBy('total_profit')"    class="th-r">Total Profit</th>
+            <th onclick="sortBy('volume')"          class="th-r">Volume</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── SLIDE-OUT MENU ── -->
+<div class="site-menu" id="site-menu">
+  <div class="site-menu-backdrop" onclick="closeMenu()"></div>
+  <div class="site-menu-panel">
+
+    <div class="site-menu-header">
+      <div class="site-menu-title">Filters &amp; Settings</div>
+      <button class="site-menu-close" onclick="closeMenu()">&times;</button>
+    </div>
+
+    <div class="site-menu-body">
+
+      <!-- Navigation -->
+      <div class="ps" style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          <a class="site-menu-link" href="/">Home</a>
+          <a class="site-menu-link" href="/EveOrders.html">EVE Orders</a>
+          <a class="site-menu-link" href="/eve-multisell.html">Multi Sell</a>
+          <a class="site-menu-link active" data-tool="market-probe" href="/market-probe.html">Market Probe</a>
+          <a class="site-menu-link" href="/trade-run.html">Trade Run</a>
+          <a class="site-menu-link" href="/margin.html">Margin Calc</a>
+        </div>
+      </div>
+
+      <!-- Columns -->
+      <div class="ps">
+        <div class="ps-hd">Columns</div>
+        <div id="col-vis-btns" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px"></div>
+      </div>
+
+      <!-- Scan Regions -->
+      <div class="ps">
+        <div class="ps-hd">Scan Regions</div>
+        <div id="scan-region-checks"></div>
+      </div>
+
+      <!-- Filter by Region -->
+      <div class="ps">
+        <div class="ps-hd">Filter Results</div>
+        <div id="region-tabs"></div>
+      </div>
+
+      <!-- Min Profit -->
+      <div class="ps">
+        <div class="ps-hd">Min Profit</div>
+        <div class="profit-filter">
+          <div class="profit-filter-col">
+            <label class="pf-lbl">ISK Floor</label>
+            <input type="number" id="min-profit-isk" value="0" min="0" oninput="applyFilters()">
+          </div>
+          <div class="profit-logic">
+            <button class="tbtn active" id="logic-and" onclick="setProfitLogic('AND')">AND</button>
+            <button class="tbtn"        id="logic-or"  onclick="setProfitLogic('OR')">OR</button>
+          </div>
+          <div class="profit-filter-col">
+            <label class="pf-lbl">% Floor</label>
+            <input type="number" id="min-profit-pct" value="0" min="0" step="0.1" oninput="applyFilters()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Min Volume -->
+      <div class="ps">
+        <div class="ps-hd">Min Volume</div>
+        <input type="number" id="min-volume" value="0" min="0" oninput="applyFilters()">
+      </div>
+
+      <!-- Categories -->
+      <div class="ps">
+        <button id="cat-toggle-btn" onclick="toggleCatTree()">
+          <span id="cat-arrow">&#9654;</span>&nbsp;Categories &amp; Groups
+        </button>
+        <div id="cat-tree"></div>
+      </div>
+
+      <!-- Characters -->
+      <div class="ps">
+        <div class="ps-hd">Characters</div>
+        <div id="char-cards"></div>
+        <button class="add-char-btn" id="add-char-btn" onclick="startOAuth()">
+          &#43; Add EVE Character
+        </button>
+        <div id="oauth-err"></div>
+      </div>
+
+      <!-- Scan Settings -->
+      <div class="ps">
+        <div class="ps-hd">Scan Settings</div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1">
+            <label style="font-size:12px;color:var(--text2);font-family:var(--display);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Broker Fee %</label>
+            <input type="number" id="broker-fee-input" min="0" max="100" step="0.001" placeholder="3.375" oninput="saveBrokerFee(this.value)">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:12px;color:var(--text2);font-family:var(--display);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Sales Tax %</label>
+            <input type="number" id="sales-tax-input" min="0" max="100" step="0.001" placeholder="1.5" oninput="saveSalesTax(this.value)">
+          </div>
+        </div>
+        <div style="height:14px"></div>
+        <label style="font-size:12px;color:var(--text2);font-family:var(--display);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Auto-Scan Interval</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="flex:1">
+            <label style="font-size:11px;color:var(--dim);font-family:var(--display);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Minutes</label>
+            <input type="number" id="rescan-min-input" min="0" step="1" placeholder="10" oninput="saveRescanInterval()">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:11px;color:var(--dim);font-family:var(--display);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Seconds</label>
+            <input type="number" id="rescan-sec-input" min="0" max="59" step="1" placeholder="0" oninput="saveRescanInterval()">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px;font-family:var(--display);letter-spacing:0.3px;">Broker fee, sales tax &amp; poll rate apply on the next scan.</div>
+      </div>
+
+    </div><!-- /site-menu-body -->
+  </div><!-- /panel -->
+</div><!-- /site-menu -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="/assets/js/site-config.js"></script>
+<script type="module" src="/src/pages/market-probe/main.js"></script>
+</body>
+</html>

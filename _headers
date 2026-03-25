@@ -1,0 +1,10 @@
+# Cloudflare Pages _headers
+# Security headers
+
+/oauth/callback.html
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/*
+  X-Content-Type-Options: nosniff

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Eden Trade Lab | Access Denied</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #06080f;
+      color: #d8e4f0;
+      font-family: 'IBM Plex Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(0, 100, 180, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(200, 150, 12, 0.04) 0%, transparent 50%);
+    }
+    .box { max-width: 460px; }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #e74c3c;
+      transform: rotate(45deg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .logo-icon::after { content: ''; width: 10px; height: 10px; background: #e74c3c; display: block; }
+    h1 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #e74c3c;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 14px;
+      color: #7a98b8;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .standing {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 28px;
+      color: #e74c3c;
+      margin: 12px 0 20px;
+      letter-spacing: 2px;
+    }
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: #4a6880;
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    a {
+      color: #f0b429;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 24px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    a:hover { color: #c8960c; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div style="display:flex;justify-content:center"><div class="logo-icon"></div></div>
+    <h1>Standing Too Low to Dock</h1>
+    <div class="standing">-10.0</div>
+    <p id="denied-copy">Your character is not on the Market Probe access list.<br>Share your character or corporation ID with the site admin and they can add it.</p>
+    <p class="mono" id="denied-meta">// waiting on access rule</p>
+    <a href="/">Back to home</a>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const characterName = params.get('characterName');
+    const characterId = params.get('characterId');
+    const corporationId = params.get('corporationId');
+    const copy = document.getElementById('denied-copy');
+    const meta = document.getElementById('denied-meta');
+
+    if (characterName || characterId) {
+      copy.innerHTML = `${characterName ? `<strong>${characterName}</strong><br>` : ''}This pilot does not currently have Market Probe access.<br>Share the ID details below with the site admin.`;
+    }
+
+    if (characterId || corporationId) {
+      const parts = [];
+      if (characterId) parts.push(`character: ${characterId}`);
+      if (corporationId) parts.push(`corp: ${corporationId}`);
+      meta.textContent = `// ${parts.join(' | ')}`;
+    }
+  </script>
+</body>
+</html>
