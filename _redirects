@@ -1,0 +1,6 @@
+# Cloudflare Pages _redirects
+# Serves clean URLs without the .html extension
+
+/oauth/callback     /oauth/callback.html   200
+/market-probe       /market-probe.html     200
+/access-denied      /access-denied.html    200

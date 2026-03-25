@@ -1,0 +1,13 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+name = "eve-tools-web"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-03-25"
+
+[[kv_namespaces]]
+binding = "ACCESS_KV"
+id = "14e7148e396e459da11f4eb39d8703a9"
+preview_id = "824fbfbf384a48d99924186b61a5cf09"
+
+[vars]
+MARKET_PROBE_TOOL_KEY = "market-probe"
+MARKET_PROBE_OPEN_ACCESS = "false"

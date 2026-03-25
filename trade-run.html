@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Eden Trade Lab | Trade Run</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/trade-run.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+</head>
+<body>
+
+<!-- ============================================================
+  HEADER
+============================================================ -->
+<header>
+  <a class="logo" href="index.html" title="Back to tools">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">New Eden Trade Lab</div>
+      <span class="logo-sub">Trade Run</span>
+    </div>
+  </a>
+
+  <div class="sep"></div>
+
+  <!-- Route selector -->
+  <div class="hub-wrap">
+    <span class="hub-label">From</span>
+    <select id="src-hub-select" class="hub-select" onchange="onSrcChange(this.value)"></select>
+    <span class="hub-arrow">→</span>
+    <span class="hub-label">To</span>
+    <select id="dst-hub-select" class="hub-select" onchange="onDstChange(this.value)"></select>
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-ghost" id="clear-btn">Clear</button>
+    <button class="btn btn-primary" id="fetch-btn" disabled>Fetch Prices</button>
+    <button class="menu-btn" type="button" data-menu-toggle aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ============================================================
+  SLIDE-OUT MENU
+============================================================ -->
+<div class="site-menu" data-site-menu>
+  <div class="site-menu-backdrop" data-menu-close></div>
+  <aside class="site-menu-panel">
+    <div class="site-menu-header">
+      <p class="site-menu-title">Settings &amp; Navigation</p>
+      <button class="site-menu-close" type="button" data-menu-close>Close</button>
+    </div>
+    <div class="site-menu-body">
+      <nav class="site-menu-links">
+        <a class="site-menu-link" href="index.html">Home</a>
+        <a class="site-menu-link" href="EveOrders.html">EVE Orders</a>
+        <a class="site-menu-link" href="eve-multisell.html">Multi Sell</a>
+        <a class="site-menu-link" data-tool="market-probe" href="/market-probe.html">Market Probe</a>
+        <a class="site-menu-link active" href="/trade-run.html">Trade Run</a>
+        <a class="site-menu-link" href="/margin.html">Margin Calc</a>
+      </nav>
+      <div class="site-menu-section">
+        <p class="site-menu-section-title">Fees &amp; Taxes</p>
+        <div class="setting-item">
+          <span class="setting-label">Broker Fee %</span>
+          <input type="number" id="setting-broker" value="3" min="0" max="10" step="0.1" onchange="saveFees()">
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Sales Tax %</span>
+          <input type="number" id="setting-tax" value="8" min="0" max="20" step="0.1" onchange="saveFees()">
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============================================================
+  MAIN CONTENT
+============================================================ -->
+<div class="main">
+
+  <!-- Input section -->
+  <div class="input-section">
+    <div class="input-section-header">
+      <div class="section-title">Shopping List</div>
+    </div>
+    <textarea id="list-input" class="list-textarea"
+      placeholder="One item per line — name followed by quantity:&#10;&#10;Tritanium 100000&#10;Mexallon 50000&#10;Pyerite 200000&#10;Isogen 10000"></textarea>
+    <div class="input-actions">
+      <span class="item-count" id="item-count">Paste a list to begin</span>
+    </div>
+  </div>
+
+  <!-- Progress bar (shown during fetch) -->
+  <div id="status-bar">
+    <span id="status-text">Fetching…</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text2)" id="progress-count"></span>
+  </div>
+
+  <!-- Stats bar (shown after first fetch) -->
+  <div id="summary-bar">
+    <div class="stat-cell">
+      <span class="stat-lbl">Items</span>
+      <span id="stat-items" class="sv">0</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-cell">
+      <span class="stat-lbl">ISK Required</span>
+      <span id="stat-isk-req" class="isk">—</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-cell">
+      <span class="stat-lbl">Est. Profit</span>
+      <span id="stat-profit">—</span>
+    </div>
+    <div class="stat-flex"></div>
+    <div class="stat-cell">
+      <span class="stat-lbl">Cargo</span>
+      <div class="cargo-wrap">
+        <div class="cargo-track"><div id="cargo-fill" class="cargo-fill"></div></div>
+        <span id="cargo-label" class="cargo-label">—</span>
+        <input id="cargo-cap" type="number" class="cargo-input" placeholder="capacity m³" min="0" onchange="saveCargoCapacity()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Results table (shown after first fetch) -->
+  <div id="table-section">
+    <div class="table-header">
+      <div class="section-title">Items</div>
+    </div>
+    <div class="table-outer">
+      <table>
+        <thead id="tr-thead">
+          <tr>
+            <th class="th-c" style="width:32px"></th>
+            <th data-col="name" onclick="sortBy('name')">Item <span class="sort-arrow">▼</span></th>
+            <th data-col="qty" class="th-r" onclick="sortBy('qty')">Qty <span class="sort-arrow">▼</span></th>
+            <th data-col="srcPrice" class="th-r" onclick="sortBy('srcPrice')">Buy Price <span class="sort-arrow">▼</span></th>
+            <th data-col="dstPrice" class="th-r" onclick="sortBy('dstPrice')">Sell Price <span class="sort-arrow">▼</span></th>
+            <th data-col="profitUnit" class="th-r" onclick="sortBy('profitUnit')">Profit / Unit <span class="sort-arrow">▼</span></th>
+            <th data-col="profitPct" class="th-r" onclick="sortBy('profitPct')">Profit % <span class="sort-arrow">▼</span></th>
+            <th data-col="totalProfit" class="th-r" onclick="sortBy('totalProfit')">Total Profit <span class="sort-arrow">▼</span></th>
+            <th data-col="profitM3" class="th-r" onclick="sortBy('profitM3')">Profit / m³ <span class="sort-arrow">▼</span></th>
+            <th data-col="volUnit" class="th-r" onclick="sortBy('volUnit')">m³ / Unit <span class="sort-arrow">▼</span></th>
+            <th data-col="totalVol" class="th-r" onclick="sortBy('totalVol')">Total m³ <span class="sort-arrow">▼</span></th>
+          </tr>
+        </thead>
+        <tbody id="tr-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Export panel (shown after fetch) -->
+  <div id="export-panel">
+    <div class="table-header">
+      <div class="section-title">Buy List Export</div>
+    </div>
+    <pre class="export-output" id="export-output"></pre>
+    <div class="export-actions">
+      <span class="export-info" id="export-info"></span>
+      <button class="btn btn-success" id="export-btn">Copy Buy List</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div>&copy; 2026 New Eden Trade Lab. All rights reserved.</div>
+  <div>EVE Online and related assets are the property of CCP hf. Used with limited permission. No official affiliation or endorsement by CCP Games.</div>
+</footer>
+
+<script src="assets/js/site-config.js"></script>
+<script src="assets/js/site-nav.js"></script>
+<script type="module" src="/src/pages/trade-run/main.js"></script>
+</body>
+</html>

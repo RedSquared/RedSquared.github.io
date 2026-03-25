@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Eden Trade Lab | Margin Calculator</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/margin.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <a href="index.html" class="logo-icon" title="Back to tools"></a>
+    <div>
+      <div class="logo-text">New Eden Trade Lab</div>
+      <span class="logo-sub">Margin Calculator</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="menu-btn" type="button" data-menu-toggle aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ── Slide-out menu ─────────────────────────────────────────── -->
+<div class="site-menu" data-site-menu>
+  <div class="site-menu-backdrop" data-menu-close></div>
+  <aside class="site-menu-panel">
+    <div class="site-menu-header">
+      <p class="site-menu-title">Navigation &amp; Settings</p>
+      <button class="site-menu-close" type="button" data-menu-close>Close</button>
+    </div>
+    <div class="site-menu-body">
+      <nav class="site-menu-links">
+        <a class="site-menu-link" href="index.html">Home</a>
+        <a class="site-menu-link" href="EveOrders.html">EVE Orders</a>
+        <a class="site-menu-link" href="eve-multisell.html">Multi Sell</a>
+        <a class="site-menu-link" href="/market-probe.html">Market Probe</a>
+        <a class="site-menu-link" href="/trade-run.html">Trade Run</a>
+        <a class="site-menu-link active" href="/margin.html">Margin Calc</a>
+      </nav>
+
+      <!-- Skill Helpers -->
+      <div class="site-menu-section">
+        <p class="site-menu-section-title">Skill Helpers</p>
+        <div class="skill-grid">
+
+          <div>
+            <div class="skill-item">
+              <span class="skill-label">Accounting</span>
+              <select class="skill-select" id="skill-accounting" title="Auto-fills Tax Rate">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="skill-hint" id="accounting-hint">Tax: 8.00%</div>
+          </div>
+
+          <div>
+            <div class="skill-item">
+              <span class="skill-label">Broker Relations</span>
+              <select class="skill-select" id="skill-broker" title="Suggested broker fee">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="skill-hint" id="broker-hint">Approx: 3.00% (no standings)</div>
+          </div>
+
+        </div>
+      </div><!-- /skill helpers -->
+    </div><!-- /site-menu-body -->
+  </aside>
+</div>
+
+<!-- ── Main content ───────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- ── Section 1: Inputs ── -->
+  <div class="calc-card">
+    <div class="calc-card-title">Inputs</div>
+    <div class="calc-card-body">
+
+      <!-- Prices row -->
+      <div class="input-row">
+        <div class="input-group input-group-wide">
+          <label class="input-label" for="buy-price">Buy Price</label>
+          <div class="input-with-unit">
+            <input type="text" id="buy-price" placeholder="0" inputmode="decimal" autocomplete="off">
+            <span class="input-unit">ISK</span>
+          </div>
+        </div>
+        <div class="input-group input-group-wide">
+          <label class="input-label" for="sell-price">Sell Price</label>
+          <div class="input-with-unit">
+            <input type="text" id="sell-price" placeholder="0" inputmode="decimal" autocomplete="off">
+            <span class="input-unit">ISK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fees row -->
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label" for="buy-broker-fee">Buy Broker Fee</label>
+          <div class="input-with-unit">
+            <input type="number" id="buy-broker-fee" value="0" min="0" max="100" step="0.001" autocomplete="off">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="sell-broker-fee">Sell Broker Fee</label>
+          <div class="input-with-unit">
+            <input type="number" id="sell-broker-fee" value="1.500" min="0" max="100" step="0.001" autocomplete="off">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="tax-rate">Tax Rate</label>
+          <div class="input-with-unit">
+            <input type="number" id="tax-rate" value="3.375" min="0" max="100" step="0.001" autocomplete="off">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target margin + qty row -->
+      <div class="input-row">
+        <div class="input-group">
+          <label class="input-label" for="target-margin">
+            Target Margin <span class="input-optional">(for required sell calc)</span>
+          </label>
+          <div class="input-with-unit">
+            <input type="number" id="target-margin" value="15" min="0" step="0.1" autocomplete="off">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="qty-input">
+            Quantity <span class="input-optional">(for totals)</span>
+          </label>
+          <div class="input-with-unit">
+            <input type="text" id="qty-input" placeholder="1" inputmode="numeric" autocomplete="off">
+            <span class="input-unit">units</span>
+          </div>
+        </div>
+        <div class="input-group" style="visibility:hidden" aria-hidden="true">
+          <label class="input-label">&nbsp;</label>
+          <div class="input-with-unit"><input type="number" tabindex="-1" style="pointer-events:none"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Section 2: Fee Breakdown ── -->
+  <div class="calc-card">
+    <div class="calc-card-title">Fee Breakdown</div>
+    <div class="calc-card-body">
+      <div class="fee-grid">
+        <div class="fee-cell">
+          <span class="fee-label">Buy Broker Fee</span>
+          <div class="fee-value"><span class="fee-val-lbl">Per Unit</span><span id="out-buy-broker-amt">—</span><span class="fee-unit">ISK</span></div>
+          <div class="fee-total" id="fee-total-row-buy-broker">
+            <span class="fee-val-lbl">Total</span><span id="out-buy-broker-total">—</span><span class="fee-unit">ISK</span>
+          </div>
+        </div>
+        <div class="fee-cell">
+          <span class="fee-label">Sell Broker Fee</span>
+          <div class="fee-value"><span class="fee-val-lbl">Per Unit</span><span id="out-sell-broker-amt">—</span><span class="fee-unit">ISK</span></div>
+          <div class="fee-total" id="fee-total-row-sell-broker">
+            <span class="fee-val-lbl">Total</span><span id="out-sell-broker-total">—</span><span class="fee-unit">ISK</span>
+          </div>
+        </div>
+        <div class="fee-cell">
+          <span class="fee-label">Tax</span>
+          <div class="fee-value"><span class="fee-val-lbl">Per Unit</span><span id="out-tax-amt">—</span><span class="fee-unit">ISK</span></div>
+          <div class="fee-total" id="fee-total-row-tax">
+            <span class="fee-val-lbl">Total</span><span id="out-tax-total">—</span><span class="fee-unit">ISK</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section 3: Summary ── -->
+  <div class="calc-card">
+    <div class="calc-card-title">Summary</div>
+    <div class="calc-card-body">
+
+      <!-- Main 4-cell row -->
+      <div class="summary-grid">
+        <div class="summary-cell">
+          <span class="summary-label">Total Buy</span>
+          <div class="summary-value" id="out-total-buy">
+            <span id="out-total-buy-val">—</span>
+            <span class="sv-unit">ISK</span>
+          </div>
+        </div>
+        <div class="summary-cell">
+          <span class="summary-label">Total Sell</span>
+          <div class="summary-value" id="out-total-sell">
+            <span id="out-total-sell-val">—</span>
+            <span class="sv-unit">ISK</span>
+          </div>
+        </div>
+        <div class="summary-cell">
+          <span class="summary-label">Profit</span>
+          <div class="summary-value" id="out-profit">
+            <span id="out-profit-val">—</span>
+            <span class="sv-unit">ISK</span>
+          </div>
+        </div>
+        <div class="summary-cell">
+          <span class="summary-label">ROI</span>
+          <div class="summary-value" id="out-margin">
+            <span id="out-margin-val">—</span>
+            <span class="sv-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Break even + required sell + max buy -->
+      <div class="derived-grid">
+        <div class="derived-cell">
+          <span class="derived-label">Break Even</span>
+          <div class="derived-value">
+            <span id="out-break-even">—</span>
+            <span class="dv-unit">ISK</span>
+          </div>
+        </div>
+        <div class="derived-cell">
+          <span class="derived-label">
+            Required Sell
+            <span class="derived-sublabel" id="target-label">(for 15% margin)</span>
+          </span>
+          <div class="derived-value">
+            <span id="out-required-sell">— enter buy price</span>
+            <span class="dv-unit">ISK</span>
+          </div>
+        </div>
+        <div class="derived-cell">
+          <span class="derived-label">
+            Max Buy Price
+            <span class="derived-sublabel">(for target margin)</span>
+          </span>
+          <div class="derived-value">
+            <span id="out-max-buy">— enter sell price</span>
+            <span class="dv-unit">ISK</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Section 4: Quantity Scale ── -->
+  <div class="calc-card">
+    <div class="calc-card-title">Quantity Scale</div>
+    <div class="qty-table-wrap">
+      <table class="qty-table">
+        <thead>
+          <tr>
+            <th>Amount</th>
+            <th>Cost</th>
+            <th>Profit</th>
+            <th>Margin</th>
+          </tr>
+        </thead>
+        <tbody id="qty-tbody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script src="assets/js/site-config.js"></script>
+<script src="assets/js/site-nav.js"></script>
+<script type="module" src="/src/pages/margin/main.js"></script>
+</body>
+</html>

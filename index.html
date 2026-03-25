@@ -1,176 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>New Eden Trade Lab - EVE Online Trade Tools</title>
-<meta name="description" content="Independent EVE Online trade tools for pricing, order tracking, and market workflows in New Eden.">
-<meta property="og:title" content="New Eden Trade Lab - EVE Online Trade Tools">
-<meta property="og:description" content="Independent EVE Online trade tools for pricing, order tracking, and market workflows in New Eden.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg-void: #06080f;
-  --bg-deep: #0b0f1a;
-  --bg-panel: #0f1520;
-  --bg-card: #141b28;
-  --bg-hover: #1a2338;
-  --border: #1e2d47;
-  --border-bright: #2a4070;
-  --gold: #c8960c;
-  --gold-bright: #f0b429;
-  --gold-dim: #7a5a08;
-  --red: #e74c3c;
-  --red-bright: #ff6b5a;
-  --red-dim: #7a1a12;
-  --cyan: #00b4cc;
-  --cyan-dim: #006a7a;
-  --text-primary: #d8e4f0;
-  --text-secondary: #7a98b8;
-  --text-dim: #3d5470;
-  --mono: 'Share Tech Mono', monospace;
-  --display: 'Orbitron', sans-serif;
-  --body: 'Exo 2', sans-serif;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: var(--bg-void); color: var(--text-primary);
-  font-family: var(--body); font-size: 14px; min-height: 100vh;
-  background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(0,100,180,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 100%, rgba(200,150,12,0.04) 0%, transparent 50%);
-}
-header {
-  background: var(--bg-deep); border-bottom: 1px solid var(--border);
-  padding: 0 24px; display: flex; align-items: center; gap: 16px;
-  height: 60px; position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
-}
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo-icon {
-  width: 28px; height: 28px; border: 2px solid var(--red);
-  transform: rotate(45deg); display: flex; align-items: center;
-  justify-content: center; flex-shrink: 0;
-}
-.logo-icon::after { content: ''; width: 8px; height: 8px; background: var(--red); display: block; }
-.logo-text { font-family: var(--display); font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--gold-bright); text-transform: uppercase; }
-.logo-sub { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: block; margin-top: -2px; }
-.main {
-  max-width: 960px; margin: 0 auto; padding: 48px 24px;
-}
-.page-heading { margin-bottom: 40px; }
-.page-heading h1 {
-  font-family: var(--display); font-size: 24px; font-weight: 700;
-  letter-spacing: 3px; text-transform: uppercase; color: var(--text-primary);
-  margin-bottom: 8px;
-}
-.page-heading p { font-size: 13px; color: var(--text-secondary); letter-spacing: 0.5px; }
-.section-label {
-  font-family: var(--display); font-size: 9px; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--gold); display: flex;
-  align-items: center; gap: 8px; margin-bottom: 16px;
-}
-.section-label::before {
-  content: ''; width: 6px; height: 6px; background: var(--gold);
-  transform: rotate(45deg); display: block; flex-shrink: 0;
-}
-.tools-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-.tool-card {
-  background: var(--bg-panel); border: 1px solid var(--border);
-  border-radius: 4px; overflow: hidden; text-decoration: none;
-  display: block; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-}
-.tool-card:hover {
-  border-color: var(--cyan); transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,180,204,0.15);
-}
-.tool-card-header {
-  background: var(--bg-deep); border-bottom: 1px solid var(--border);
-  padding: 16px; display: flex; align-items: center; gap: 12px;
-}
-.tool-icon {
-  width: 36px; height: 36px; border: 1.5px solid var(--red);
-  transform: rotate(45deg); display: flex; align-items: center;
-  justify-content: center; flex-shrink: 0; transition: border-color 0.15s;
-}
-.tool-card:hover .tool-icon { border-color: var(--cyan); }
-.tool-icon::after {
-  content: ''; width: 10px; height: 10px; background: var(--red);
-  display: block; transition: background 0.15s;
-}
-.tool-card:hover .tool-icon::after { background: var(--cyan); }
-.tool-name {
-  font-family: var(--display); font-size: 11px; font-weight: 700;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-primary);
-}
-.tool-sub {
-  font-size: 10px; letter-spacing: 1px; color: var(--text-dim);
-  text-transform: uppercase; margin-top: 2px;
-}
-.tool-card-body { padding: 16px; }
-.tool-desc {
-  font-size: 12px; color: var(--text-secondary); line-height: 1.6;
-  margin-bottom: 14px;
-}
-.tool-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.tag {
-  font-family: var(--mono); font-size: 10px; padding: 2px 7px;
-  border-radius: 2px; background: rgba(0,180,204,0.08);
-  border: 1px solid rgba(0,180,204,0.2); color: var(--cyan);
-}
-.about-card,
-.support-card,
-.footer-block {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 18px 20px;
-}
-.about-card,
-.support-card { margin-top: 24px; }
-.about-copy,
-.support-copy {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-.support-title {
-  font-family: var(--display);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 10px;
-}
-footer {
-  border-top: 1px solid var(--border);
-  padding: 24px;
-  margin-top: 48px;
-}
-.footer-block { display: grid; gap: 6px; }
-.footer-brand {
-  color: var(--text-primary);
-  font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-}
-.footer-line {
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-  font-family: var(--body);
-}
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-void); }
-::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Eden Trade Lab</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/index.css">
+<link rel="stylesheet" href="assets/css/site-nav.css">
 </head>
 <body>
 <header>
@@ -178,15 +17,42 @@ footer {
     <div class="logo-icon"></div>
     <div>
       <div class="logo-text">New Eden Trade Lab</div>
-      <span class="logo-sub">Independent Trade Tools</span>
+      <span class="logo-sub">Tools &amp; Utilities</span>
     </div>
   </div>
+  <button class="menu-btn" type="button" data-menu-toggle aria-label="Open navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </header>
+
+<div class="site-menu" data-site-menu>
+  <div class="site-menu-backdrop" data-menu-close></div>
+  <aside class="site-menu-panel">
+    <div class="site-menu-header">
+      <p class="site-menu-title">Navigate</p>
+      <button class="site-menu-close" type="button" data-menu-close>Close</button>
+    </div>
+    <div class="site-menu-body">
+    <nav class="site-menu-links">
+      <a class="site-menu-link active" href="index.html">Home</a>
+      <a class="site-menu-link" href="EveOrders.html">EVE Orders</a>
+      <a class="site-menu-link" href="eve-multisell.html">Multi Sell</a>
+      <a class="site-menu-link" data-tool="market-probe" href="/market-probe.html">Market Probe</a>
+      <a class="site-menu-link" href="/trade-run.html">Trade Run</a>
+      <a class="site-menu-link" href="/margin.html">Margin Calc</a>
+    </nav>
+    </div><!-- /site-menu-body -->
+  </aside>
+</div>
+
 <div class="main">
   <div class="page-heading">
     <h1>New Eden Trade Lab</h1>
-    <p>EVE Online trade tools.</p>
+    <p>Browser-based EVE trading utilities. Open a tool, work fast, and iterate locally before production.</p>
   </div>
+
   <div class="section-label">EVE Online</div>
   <div class="tools-grid">
     <a class="tool-card" href="eve-multisell.html">
@@ -199,7 +65,7 @@ footer {
       </div>
       <div class="tool-card-body">
         <p class="tool-desc">
-          Set your sell prices in one step. Paste your haul, get undercut prices, and copy the results back into EVE for initial sell listings.
+          Set your sell prices in one step - paste your haul, get undercut prices, copy back. For the initial sell listing only, not for browsing the market or updating existing orders.
         </p>
         <div class="tool-tags">
           <span class="tag">market</span>
@@ -212,13 +78,13 @@ footer {
       <div class="tool-card-header">
         <div class="tool-icon"></div>
         <div>
-          <div class="tool-name">Orders Dashboard</div>
-          <div class="tool-sub">Active Order Tracking</div>
+          <div class="tool-name">EVE Orders</div>
+          <div class="tool-sub">Order Dashboard</div>
         </div>
       </div>
       <div class="tool-card-body">
         <p class="tool-desc">
-          Monitor active market orders across characters and stations with undercut tracking, wallet visibility, order age, and expiry awareness.
+          Monitor your active market orders across characters and stations - track undercuts, wallet balances, and order expiry in real time.
         </p>
         <div class="tool-tags">
           <span class="tag">market</span>
@@ -228,27 +94,78 @@ footer {
         </div>
       </div>
     </a>
-  </div>
-  <div class="about-card">
-    <div class="section-label">About</div>
-    <p class="about-copy">
-      New Eden Trade Lab provides tools and utilities for traders and market-focused capsuleers in EVE Online.
-      The goal of this project is to make pricing, order tracking, and day-to-day trade decisions easier for capsuleers.
-      This is an independent community project and is not affiliated with or endorsed by CCP hf.
-    </p>
+    <a class="tool-card" data-tool="market-probe" href="/market-probe.html">
+      <div class="tool-card-header">
+        <div class="tool-icon"></div>
+        <div>
+          <div class="tool-name">Market Probe</div>
+          <div class="tool-sub">Market Scanner</div>
+        </div>
+      </div>
+      <div class="tool-card-body">
+        <p class="tool-desc">
+          Scan Jita, Amarr, Dodixie, Rens and Hek simultaneously for one-click mistake sell orders — buy low, relist, profit.
+        </p>
+        <div class="tool-tags">
+          <span class="tag">market</span>
+          <span class="tag">arbitrage</span>
+          <span class="tag">ESI</span>
+          <span class="tag">SSO</span>
+        </div>
+      </div>
+    </a>
+    <a class="tool-card" href="margin.html">
+      <div class="tool-card-header">
+        <div class="tool-icon"></div>
+        <div>
+          <div class="tool-name">Margin Calculator</div>
+          <div class="tool-sub">Trade Calculator</div>
+        </div>
+      </div>
+      <div class="tool-card-body">
+        <p class="tool-desc">
+          Calculate ROI, break-even price, and required sell price from buy cost and fees. Supports target ROI over 100% for high-markup trades.
+        </p>
+        <div class="tool-tags">
+          <span class="tag">market</span>
+          <span class="tag">trading</span>
+          <span class="tag">calculator</span>
+        </div>
+      </div>
+    </a>
+    <a class="tool-card" href="trade-run.html">
+      <div class="tool-card-header">
+        <div class="tool-icon"></div>
+        <div>
+          <div class="tool-name">Trade Run</div>
+          <div class="tool-sub">Regional Arbitrage</div>
+        </div>
+      </div>
+      <div class="tool-card-body">
+        <p class="tool-desc">
+          Paste your shopping list, fetch live prices from two regions, and see profit, cargo volume, and a ready-to-buy list — all in one place.
+        </p>
+        <div class="tool-tags">
+          <span class="tag">market</span>
+          <span class="tag">arbitrage</span>
+          <span class="tag">hauling</span>
+          <span class="tag">ESI</span>
+        </div>
+      </div>
+    </a>
   </div>
 </div>
+
 <footer>
-  <div class="footer-block">
-    <div class="footer-brand">New Eden Trade Lab</div>
-    <div class="footer-line">Independent EVE Online trade tools.</div>
-    <div class="footer-line">This website is not affiliated with or endorsed by CCP hf.</div>
-    <div class="footer-line">EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide. All other trademarks are the property of their respective owners.</div>
-    <div class="footer-line">Optional ISK donations: Corporation Blue Stream Trading.</div>
-    <div class="footer-line">© 2026 New Eden Trade Lab</div>
+  <div>&copy; 2026 New Eden Trade Lab. All rights reserved.</div>
+  <div class="support-copy">If New Eden Trade Lab saves you time, optional in-game ISK support for the project is always appreciated.</div>
+  <div class="legal-copy">
+    EVE Online and related assets are the property of CCP hf.
+    This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied.
   </div>
 </footer>
+
+<script src="assets/js/site-config.js"></script>
+<script src="assets/js/site-nav.js"></script>
 </body>
 </html>
-
-
